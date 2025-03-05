@@ -31,16 +31,24 @@ window.addEventListener("keypress", function (event) {
 
     switch (event.key) {
         case "w":
-            playerPos[0] = playerPos[0]+1;
+            playerPos[0] = playerPos[0]+(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
+            playerPos[1] = playerPos[1]+(Math.sin(playerRot[2])*Math.cos(playerRot[1]));
+            playerPos[2] = playerPos[2]+(Math.sin(playerRot[1]));
             break;
         case "a":
-            playerPos[1] = playerPos[1]+1;
+            playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
+            playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
+            playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
             break;
         case "s":
-            playerPos[0] = playerPos[0]-1;
+            playerPos[0] = playerPos[0]-(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
+            playerPos[1] = playerPos[1]-(Math.sin(playerRot[2])*Math.cos(playerRot[1]));
+            playerPos[2] = playerPos[2]-(Math.sin(playerRot[1]));
             break;
         case "d":
-            playerPos[1] = playerPos[1]-1;
+            playerPos[0] = playerPos[0]-(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
+            playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
+            playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
             break;
         case "i":
             playerRot[1] = playerRot[1]+1;
@@ -70,8 +78,8 @@ function clear() {
 
 function drawDebug() {
     ctx.beginPath();
-    ctx.moveTo(playerPos[0]+256, playerPos[1]+256);
-    ctx.lineTo((playerPos[0]+256)+(16*Math.cos(playerRot[2])*Math.cos(playerRot[1])), (playerPos[1]+256)+(16*Math.sin(playerRot[2])*Math.cos(playerRot[1])));
+    ctx.moveTo(playerPos[0]+256, 256-playerPos[1]);
+    ctx.lineTo((playerPos[0]+256)+(16*Math.cos(playerRot[2])*Math.cos(playerRot[1])), (256-playerPos[1])-(16*Math.sin(playerRot[2])*Math.cos(playerRot[1])));
     ctx.strokeStyle = "white";
     ctx.lineWidth = 4;
     ctx.stroke();

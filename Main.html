@@ -1,9 +1,75 @@
-<canvas id="window" width="200" height="100" style="border:1px solid black;">
+<canvas id="window" width="512" height="512">
 </canvas>
 
 <script>
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-ctx.fillStyle = "red";
-ctx.fillRect(0, 0, 150, 75);
+
+
+
+var playerPos = new Float64Array(3);
+var playerRot = new Float64Array(3);
+
+playerPos[0] = -3;
+playerPos[1] = 0;
+playerPos[2] = 0;
+
+playerRot[0] = 0;
+playerRot[1] = 0;
+playerRot[2] = 0;
+
+
+
+
+refreshScreen();
+
+
+
+window.addEventListener("keypress", function (event) {
+    
+    if (event.defaultPrevented) {
+        return; // Do nothing if the event was already processed
+    }
+
+    switch (event.key) {
+        case "w":
+            playerPos[0] = playerPos[0]+1;
+            break;
+        case "a":
+            playerPos[1] = playerPos[1]+1;
+            break;
+        case "s":
+            playerPos[0] = playerPos[0]-1;
+            break;
+        case "d":
+            playerPos[1] = playerPos[1]-1;
+            break;
+        default:
+            return;
+    }
+
+    event.preventDefault();
+    refreshScreen();
+    
+}, true);
+
+function clear() {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, 512, 512);
+}
+
+function drawDebug() {
+    ctx.beginPath();
+    ctx.moveTo(playerPos[0]+256, playerPos[1]+256);
+    ctx.lineTo((playerPos[0]+256)+(Math.sin(playerRot[2])*Math.cos(playerRot[1])), (playerPos[1]+256)+(Math.cos(playerRot[2])*Math.cos(playerRot[1])));
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 16;
+    ctx.stroke();
+}
+
+function refreshScreen() {
+    clear();
+    drawDebug();
+}
+
 </script>

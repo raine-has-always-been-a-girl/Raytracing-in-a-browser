@@ -5,23 +5,79 @@
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 
-var playerPos = new Float64Array(3);
-var playerRot = new Float64Array(3);
+const testTriangles = [
+    [
+        [0, 1, -1],
+        [0, 0, 1],
+        [0, -1, -1],
+        [-1, 1, 1],
+        [-1, 0, -1],
+        [-1, -1, 1]
+    ], 
+    
+    [
+        [[0,1,2], "blue"],
+        [[3,4,5], "red"]
+    ]
+];
+const objectList = [testTriangles];
 
-playerPos[0] = -3;
-playerPos[1] = 0;
-playerPos[2] = 0;
-
-playerRot[0] = 0;
-playerRot[1] = 0;
-playerRot[2] = 0;
-
-
-
+var playerPos = [-3, 0, 0];
+var playerRot = [0, 0, 0];
 
 refreshScreen();
+ray();
 
 
+// rendering stuff
+
+function ray() {
+    for(let i=0; i<=objectList.length; i++) {
+        window.alert(objectList[i][1].length);
+        for(let j=0; j<=objectList[i][1].length; j++) {
+            var n = normalizeVector3(cross(vector3Subtract(objectList[i][0][objectList[i][1][j][0][0]], objectList[i][0][objectList[i][1][j][0][1]]), vector3Subtract(objectList[i][0][objectList[i][1][j][0][0]], objectList[i][0][objectList[i][1][j][0][2]])));
+            window.alert(n);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// math stuff
+
+function cross(a, b){
+    return [
+        (a[1]*b[2])-(a[2]*b[1]),
+        (a[2]*b[0])-(a[0]*b[2]),
+        (a[0]*b[1])-(a[1]*b[0])
+    ];
+}
+
+function vector3Subtract(a, b){
+    return [
+        a[0]-b[0],
+        a[1]-b[1],
+        a[2]-b[2]
+    ];
+}
+
+function vector3Normalize(v) {
+    var mag = Math.sqrt((v[0]*v[0])+(v[1]*v[1])+(v[2]*v[2]));
+    return [
+        v[0]/mag,
+        v[1]/mag,
+        v[2]/mag
+    ];
+}
+
+// window stuff
 
 window.addEventListener("keypress", function (event) {
     
@@ -50,8 +106,17 @@ window.addEventListener("keypress", function (event) {
             playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
             break;
+
+
+
+        case "u":
+            playerRot[0] = playerRot[0]+1;
+            break;
         case "i":
             playerRot[1] = playerRot[1]+1;
+            break;
+        case "o":
+            playerRot[0] = playerRot[0]-1;
             break;
         case "j":
             playerRot[2] = playerRot[2]+1;

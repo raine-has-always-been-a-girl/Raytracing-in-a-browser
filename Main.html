@@ -4,12 +4,22 @@
 <script>
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
+const tolerance = 0.0001
 
+const emptySet = [
+    [
+        [0,0,0]
+    ], 
+    
+    [
+        [[0,0,0], "black"]
+    ]
+];
 const testTriangles = [
     [
-        [0, 1, -1],
-        [0, 0, 1],
-        [0, -1, -1],
+        [1, 1, -1],
+        [1, 0, 1],
+        [1, -1, -1],
         [-1, 1, 1],
         [-1, 0, -1],
         [-1, -1, 1]
@@ -20,25 +30,42 @@ const testTriangles = [
         [[3,4,5], "red"]
     ]
 ];
-const objectList = [testTriangles];
+const objectList = [emptySet, testTriangles];
 
-var playerPos = [-3, 0, 0];
-var playerRot = [0, 0, 0];
+var playerPos = [3, 0, 0];
+var playerRot = [0, 0, Math.PI];
 
 refreshScreen();
-ray();
 
 
 // rendering stuff
 
-function ray() {
-    for(let i=0; i<=objectList.length; i++) {
-        window.alert(objectList[i][1].length);
-        for(let j=0; j<=objectList[i][1].length; j++) {
-            var n = normalizeVector3(cross(vector3Subtract(objectList[i][0][objectList[i][1][j][0][0]], objectList[i][0][objectList[i][1][j][0][1]]), vector3Subtract(objectList[i][0][objectList[i][1][j][0][0]], objectList[i][0][objectList[i][1][j][0][2]])));
-            window.alert(n);
+function ray(o, r) {
+    var distCheck = Infinity;
+    var nearestTriangle = [0,0];
+    for(let i=0; i<objectList.length; i++) {
+        for(let j=0; j<((objectList[i][1]).length); j++) {
+            var triangle = [
+                objectList[i][0][objectList[i][1][j][0][0]],
+                objectList[i][0][objectList[i][1][j][0][1]],
+                objectList[i][0][objectList[i][1][j][0][2]]
+            ];
+            var n = vector3Normalize(cross(vector3Subtract(triangle[1], triangle[0]), vector3Subtract(triangle[2], triangle[0])));
+            if (dot(n, r) == 0) {
+                continue;
+            }
+            var dist = -(dot(n, o)+dot(n, [-triangle[0][0],triangle[0][1],triangle[0][2]]))/dot(n, r);
+            if (dist <= 0) {
+                continue;
+            }
+            var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
+            if((dist < distCheck) && (isPointInTriangle(triangle, point))) {
+                distCheck = dist;
+                nearestTriangle = [i,j];
+            }
         }
     }
+    return objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
 }
 
 
@@ -60,6 +87,10 @@ function cross(a, b){
     ];
 }
 
+function dot(a, b){
+    return (a[0]*b[0])+(a[1]*b[1])+(a[2]*b[2]);
+}
+
 function vector3Subtract(a, b){
     return [
         a[0]-b[0],
@@ -75,6 +106,44 @@ function vector3Normalize(v) {
         v[1]/mag,
         v[2]/mag
     ];
+}
+
+function rotToVector3(rot){
+    return [
+        Math.cos(rot[2])*Math.cos(rot[1]),
+        Math.sin(rot[2])*Math.cos(rot[1]),
+        Math.sin(rot[1])
+    ];
+}
+
+function isPointInTriangle(triangle, point){
+    // based on heron's formula
+    var sab = vector3Subtract(triangle[0], triangle[1]);
+    var sbc = vector3Subtract(triangle[1], triangle[2]);
+    var sca = vector3Subtract(triangle[2], triangle[0]);
+    var spa = vector3Subtract(triangle[0], point);
+    var spb = vector3Subtract(triangle[1], point);
+    var spc = vector3Subtract(triangle[2], point);
+    var dab = Math.sqrt((sab[0]*sab[0])+(sab[1]*sab[1])+(sab[2]*sab[2]));
+    var dbc = Math.sqrt((sbc[0]*sbc[0])+(sbc[1]*sbc[1])+(sbc[2]*sbc[2]));
+    var dca = Math.sqrt((sca[0]*sca[0])+(sca[1]*sca[1])+(sca[2]*sca[2]));
+    var dap = Math.sqrt((spa[0]*spa[0])+(spa[1]*spa[1])+(spa[2]*spa[2]));
+    var dbp = Math.sqrt((spb[0]*spb[0])+(spb[1]*spb[1])+(spb[2]*spb[2]));   
+    var dcp = Math.sqrt((spc[0]*spc[0])+(spc[1]*spc[1])+(spc[2]*spc[2])); 
+    var sabc = (dab+dbc+dca)/2;
+    var spbc = (dbp+dbc+dcp)/2;
+    var sapc = (dap+dcp+dca)/2;
+    var sabp = (dab+dbp+dap)/2;
+    var abc = Math.sqrt(sabc*(sabc-dab)*(sabc-dbc)*(sabc-dca));
+    var pbc = Math.sqrt(spbc*(spbc-dbp)*(spbc-dbc)*(spbc-dcp));
+    var apc = Math.sqrt(sapc*(sapc-dap)*(sapc-dcp)*(sapc-dca));
+    var abp = Math.sqrt(sabp*(sabp-dab)*(sabp-dbp)*(sabp-dap));
+    var pabc = pbc+apc+abp;
+    if (pabc <= abc+tolerance) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // window stuff
@@ -93,7 +162,7 @@ window.addEventListener("keypress", function (event) {
             break;
         case "a":
             playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
-            playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
+            playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
             break;
         case "s":
@@ -103,7 +172,7 @@ window.addEventListener("keypress", function (event) {
             break;
         case "d":
             playerPos[0] = playerPos[0]-(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
-            playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
+            playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
             break;
 
@@ -119,13 +188,13 @@ window.addEventListener("keypress", function (event) {
             playerRot[0] = playerRot[0]-1;
             break;
         case "j":
-            playerRot[2] = playerRot[2]+1;
+            playerRot[2] = playerRot[2]-1;
             break;
         case "k":
             playerRot[1] = playerRot[1]-1;
             break;
         case "l":
-            playerRot[2] = playerRot[2]-1;
+            playerRot[2] = playerRot[2]+1;
             break;
         default:
             return;
@@ -143,16 +212,31 @@ function clear() {
 
 function drawDebug() {
     ctx.beginPath();
-    ctx.moveTo(playerPos[0]+256, 256-playerPos[1]);
-    ctx.lineTo((playerPos[0]+256)+(16*Math.cos(playerRot[2])*Math.cos(playerRot[1])), (256-playerPos[1])-(16*Math.sin(playerRot[2])*Math.cos(playerRot[1])));
+    ctx.moveTo(playerPos[0]+256, playerPos[1]+256);
+    ctx.lineTo((playerPos[0]+256)+(16*Math.cos(playerRot[2])*Math.cos(playerRot[1])), (playerPos[1]+256)+(16*Math.sin(playerRot[2])*Math.cos(playerRot[1])));
     ctx.strokeStyle = "white";
     ctx.lineWidth = 4;
     ctx.stroke();
 }
 
+function castRays() {
+    for (let i = 0; i < 512; i++) {
+        var y = (Math.PI/4)*((i/256)-1);
+        for (let j = 0; j < 512; j++) {
+            var x = (Math.PI/4)*((j/256)-1);
+            var rayRot = [playerRot[0], playerRot[1]+y, playerRot[2]+x];
+            var color = ray(playerPos, rotToVector3(rayRot));
+            ctx.fillStyle = color;
+            ctx.fillRect(j, 512-i, j+1, 511-i);
+        }
+    }
+}
+
 function refreshScreen() {
     clear();
-    drawDebug();
+    castRays();
+    // drawDebug();
+    
 }
 
 </script>

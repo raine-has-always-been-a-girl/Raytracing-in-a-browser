@@ -8,6 +8,8 @@ const resolution = 512;
 const tolerance = 0.000000000001;
 const rotationAmount = Math.PI/8;
 
+var playerPos = [-3, 0, 0];
+var playerRot = [0, 0, 0];
 
 const emptySet = [
     [
@@ -34,9 +36,6 @@ const testTriangles = [
     ]
 ];
 const objectList = [emptySet, testTriangles];
-
-var playerPos = [-3, 0, 0];
-var playerRot = [0, 0, 0];
 
 refreshScreen();
 
@@ -192,15 +191,25 @@ window.addEventListener("keypress", function (event) {
     }
 
     switch (event.key) {
+        case "q":
+            playerPos[0] = playerPos[0]+(Math.cos(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
+            playerPos[1] = playerPos[1]-(Math.sin(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
+            playerPos[2] = playerPos[2]-(Math.cos(playerRot[1])*Math.cos(playerRot[0]));
+            break;
         case "w":
             playerPos[0] = playerPos[0]+(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
             playerPos[1] = playerPos[1]+(Math.sin(playerRot[2])*Math.cos(playerRot[1]));
             playerPos[2] = playerPos[2]+(Math.sin(playerRot[1]));
             break;
+        case "e":
+            playerPos[0] = playerPos[0]-(Math.cos(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
+            playerPos[1] = playerPos[1]+(Math.sin(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
+            playerPos[2] = playerPos[2]+(Math.cos(playerRot[1])*Math.cos(playerRot[0]));
+            break;
         case "a":
             playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
-            playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
+            playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
             break;
         case "s":
             playerPos[0] = playerPos[0]-(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
@@ -210,7 +219,7 @@ window.addEventListener("keypress", function (event) {
         case "d":
             playerPos[0] = playerPos[0]-(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
-            playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
+            playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
             break;
 
         case "u":

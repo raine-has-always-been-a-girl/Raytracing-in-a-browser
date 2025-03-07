@@ -5,10 +5,10 @@
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 const resolution = 512;
-const tolerance = 0.000000000001;
+const tolerance = 0.0000000001;
 const rotationAmount = Math.PI/8;
 
-var playerPos = [-3, 0, 0];
+var playerPos = [-4, 0, 0];
 var playerRot = [0, 0, 0];
 
 const emptySet = [
@@ -177,6 +177,31 @@ function rotateVector3(vector, rotation){
     return newVector3;
 }
 
+function upVector3(rotation){
+
+    var newVector3 = [
+        Math.sin(rotation[1])*Math.cos(rotation[0]),
+        Math.sin(rotation[0]),
+        Math.cos(rotation[1])*Math.cos(rotation[0])
+    ];
+
+    var mag = Math.sqrt((newVector3[0]*newVector3[0])+(newVector3[1]*newVector3[1]));
+    var rot;
+    if (mag != 0) {
+        if (newVector3[1] > 0) {
+            rot = Math.acos(newVector3[0]/mag);
+        } else {
+            rot = -Math.acos(newVector3[0]/mag);
+        }
+        newVector3 = [
+            Math.cos(rot+rotation[2])*mag,
+            Math.sin(rot+rotation[2])*mag,
+            newVector3[2]
+        ];
+    }
+    return newVector3;
+}
+
 function isPointInTriangle(triangle, point){
     // based on heron's formula
     var sab = vector3Subtract(triangle[0], triangle[1]);
@@ -220,9 +245,10 @@ window.addEventListener("keypress", function (event) {
 
     switch (event.key) {
         case "q": // down
-            playerPos[0] = playerPos[0]+(Math.cos(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
-            playerPos[1] = playerPos[1]-(Math.sin(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
-            playerPos[2] = playerPos[2]-(Math.cos(playerRot[1])*Math.cos(playerRot[0]));
+            var up = upVector3(playerRot);
+            playerPos[0] = playerPos[0]+up[0];
+            playerPos[1] = playerPos[1]+up[1];
+            playerPos[2] = playerPos[2]-up[2];
             break;
         case "w": // forward
             playerPos[0] = playerPos[0]+(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
@@ -230,9 +256,10 @@ window.addEventListener("keypress", function (event) {
             playerPos[2] = playerPos[2]+(Math.sin(playerRot[1]));
             break;
         case "e": // up
-            playerPos[0] = playerPos[0]-(Math.cos(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
-            playerPos[1] = playerPos[1]+(Math.sin(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
-            playerPos[2] = playerPos[2]+(Math.cos(playerRot[1])*Math.cos(playerRot[0]));
+            var up = upVector3(playerRot);
+            playerPos[0] = playerPos[0]-up[0];
+            playerPos[1] = playerPos[1]-up[1];
+            playerPos[2] = playerPos[2]+up[2];
             break;
         case "a":  // left
             playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*Math.cos(playerRot[0]));

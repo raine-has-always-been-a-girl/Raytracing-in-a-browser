@@ -35,7 +35,34 @@ const testTriangles = [
         [[3,4,5], "red"]
     ]
 ];
-const objectList = [emptySet, testTriangles];
+const cube = [
+    [
+        [-1, -1, -1],
+        [-1, -1, 1],
+        [-1, 1, -1],
+        [-1, 1, 1],
+        [1, -1, -1],
+        [1, -1, 1],
+        [1, 1, -1],
+        [1, 1, 1]
+    ],
+
+    [
+        [[0, 2, 4], "white"],
+        [[2, 4, 6], "white"],
+        [[0, 1, 2], "red"],
+        [[1, 2, 3], "red"],
+        [[0, 1, 4], "blue"],
+        [[1, 4, 5], "blue"],
+        [[4, 5, 6], "orange"],
+        [[5, 6, 7], "orange"],
+        [[2, 3, 6], "green"],
+        [[3, 6, 7], "green"],
+        [[1, 3, 5], "yellow"],
+        [[3, 5, 7], "yellow"]
+    ]
+];
+const objectList = [emptySet, cube];
 
 refreshScreen();
 
@@ -57,7 +84,7 @@ function ray(o, r) {
             if (dotnr == 0) {
                 continue;
             }
-            var dist = -(dot(n, o)+dot(n, [-triangle[0][0],triangle[0][1],triangle[0][2]]))/dotnr;
+            var dist = -(dot(n, o)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dotnr;
             if (dist <= 0) {
                 continue;
             }
@@ -184,6 +211,7 @@ function isPointInTriangle(triangle, point){
 
 // window stuff
 
+// movement code
 window.addEventListener("keypress", function (event) {
     
     if (event.defaultPrevented) {
@@ -191,55 +219,56 @@ window.addEventListener("keypress", function (event) {
     }
 
     switch (event.key) {
-        case "q":
+        case "q": // down
             playerPos[0] = playerPos[0]+(Math.cos(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
             playerPos[1] = playerPos[1]-(Math.sin(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
             playerPos[2] = playerPos[2]-(Math.cos(playerRot[1])*Math.cos(playerRot[0]));
             break;
-        case "w":
+        case "w": // forward
             playerPos[0] = playerPos[0]+(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
             playerPos[1] = playerPos[1]+(Math.sin(playerRot[2])*Math.cos(playerRot[1]));
             playerPos[2] = playerPos[2]+(Math.sin(playerRot[1]));
             break;
-        case "e":
+        case "e": // up
             playerPos[0] = playerPos[0]-(Math.cos(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
             playerPos[1] = playerPos[1]+(Math.sin(playerRot[0]+playerRot[2])*Math.sin(playerRot[0]+playerRot[1]));
             playerPos[2] = playerPos[2]+(Math.cos(playerRot[1])*Math.cos(playerRot[0]));
             break;
-        case "a":
+        case "a":  // left
             playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
             break;
-        case "s":
+        case "s": // back
             playerPos[0] = playerPos[0]-(Math.cos(playerRot[2])*Math.cos(playerRot[1]));
             playerPos[1] = playerPos[1]-(Math.sin(playerRot[2])*Math.cos(playerRot[1]));
             playerPos[2] = playerPos[2]-(Math.sin(playerRot[1]));
             break;
-        case "d":
+        case "d": // right
             playerPos[0] = playerPos[0]-(Math.sin(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*Math.cos(playerRot[0]));
             playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
             break;
 
-        case "u":
+        case "u": // roll left
             playerRot[0] = playerRot[0]+rotationAmount;
             break;
-        case "i":
+        case "i": // pitch up
             playerRot[1] = playerRot[1]+rotationAmount;
             break;
-        case "o":
+        case "o": // roll right
             playerRot[0] = playerRot[0]-rotationAmount;
             break;
-        case "j":
+        case "j": // yaw left
             playerRot[2] = playerRot[2]-rotationAmount;
             break;
-        case "k":
+        case "k": // pitch down
             playerRot[1] = playerRot[1]-rotationAmount;
             break;
-        case "l":
+        case "l": // yaw left
             playerRot[2] = playerRot[2]+rotationAmount;
             break;
+
         default:
             return;
     }

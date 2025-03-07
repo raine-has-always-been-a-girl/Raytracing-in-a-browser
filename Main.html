@@ -204,6 +204,7 @@ function upVector3(rotation){
 
 function isPointInTriangle(triangle, point){
     // based on heron's formula
+    // wildly ineficient. fix needed
     var sab = vector3Subtract(triangle[0], triangle[1]);
     var sbc = vector3Subtract(triangle[1], triangle[2]);
     var sca = vector3Subtract(triangle[2], triangle[0]);

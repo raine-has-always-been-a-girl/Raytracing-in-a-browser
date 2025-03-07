@@ -6,6 +6,7 @@ const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 const resolution = 512;
 const tolerance = 0.000000000001;
+const rotationAmount = Math.PI/8;
 
 
 const emptySet = [
@@ -34,8 +35,8 @@ const testTriangles = [
 ];
 const objectList = [emptySet, testTriangles];
 
-var playerPos = [3, 0, 0];
-var playerRot = [0, 0, Math.PI];
+var playerPos = [-3, 0, 0];
+var playerRot = [0, 0, 0];
 
 refreshScreen();
 
@@ -109,6 +110,47 @@ function rotToVector3(rot){
     ];
 }
 
+function rotateVector3(vector, rotation){
+    var mag = Math.sqrt((vector[1]*vector[1])+(vector[2]*vector[2]));
+    var rot = 0;
+    if (vector[2] > 0) {
+        rot = Math.acos(vector[1]/mag);
+    } else {
+        rot = -Math.acos(vector[1]/mag);
+    }
+    var newVector3 = [
+        vector[0],
+        Math.cos(rot+rotation[0])*mag,
+        Math.sin(rot+rotation[0])*mag
+    ];
+
+    mag = Math.sqrt((newVector3[0]*newVector3[0])+(newVector3[2]*newVector3[2]));
+    if (newVector3[2] > 0) {
+        rot = Math.acos(newVector3[0]/mag);
+    } else {
+        rot = -Math.acos(newVector3[0]/mag);
+    }
+    newVector3 = [
+        Math.cos(rot+rotation[1])*mag,
+        newVector3[1],
+        Math.sin(rot+rotation[1])*mag
+    ];
+
+    mag = Math.sqrt((newVector3[0]*newVector3[0])+(newVector3[1]*newVector3[1]));
+    if (newVector3[1] > 0) {
+        rot = Math.acos(newVector3[0]/mag);
+    } else {
+        rot = -Math.acos(newVector3[0]/mag);
+    }
+    newVector3 = [
+        Math.cos(rot+rotation[2])*mag,
+        Math.sin(rot+rotation[2])*mag,
+        newVector3[2]
+    ];
+    
+    return newVector3;
+}
+
 function isPointInTriangle(triangle, point){
     // based on heron's formula
     var sab = vector3Subtract(triangle[0], triangle[1]);
@@ -172,22 +214,22 @@ window.addEventListener("keypress", function (event) {
             break;
 
         case "u":
-            playerRot[0] = playerRot[0]+1;
+            playerRot[0] = playerRot[0]+rotationAmount;
             break;
         case "i":
-            playerRot[1] = playerRot[1]+1;
+            playerRot[1] = playerRot[1]+rotationAmount;
             break;
         case "o":
-            playerRot[0] = playerRot[0]-1;
+            playerRot[0] = playerRot[0]-rotationAmount;
             break;
         case "j":
-            playerRot[2] = playerRot[2]-1;
+            playerRot[2] = playerRot[2]-rotationAmount;
             break;
         case "k":
-            playerRot[1] = playerRot[1]-1;
+            playerRot[1] = playerRot[1]-rotationAmount;
             break;
         case "l":
-            playerRot[2] = playerRot[2]+1;
+            playerRot[2] = playerRot[2]+rotationAmount;
             break;
         default:
             return;
@@ -195,30 +237,21 @@ window.addEventListener("keypress", function (event) {
 
     event.preventDefault();
     refreshScreen();
-
 }, true);
-
-function clear() {
-    ctx.fillStyle = "magenta";
-    ctx.fillRect(0, 0, 512, 512);
-}
 
 function castRays() {
     for (let i = 0; i < resolution; i++) {
-        var y = (Math.PI/4)*((i/(resolution/4))-Math.PI);
         for (let j = 0; j < resolution; j++) {
-            var x = (Math.PI/4)*((j/(resolution/2))-1);
-            var rayRot = [playerRot[0], playerRot[1]+y, playerRot[2]+x];
-            var color = ray(playerPos, rotToVector3(rayRot));
+            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (4*i/resolution)-3]), playerRot);
+            var color = ray(playerPos, rayRot);
             ctx.fillStyle = color;
-            ctx.fillRect(j*(512/resolution), 512-i*(512/resolution), (j+1)*(512/resolution), 511-i*(512/resolution));
+            ctx.fillRect(j*(512/resolution), 512-i*(512/resolution), (j+1)*(512/resolution), 512-(i-1)*(512/resolution));
         }
     }
 }
 
 function refreshScreen() {
-    clear();
-    castRays();    
+    castRays();
 }
 
 </script>

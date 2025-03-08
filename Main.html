@@ -22,17 +22,15 @@ const emptySet = [
 ];
 const testTriangles = [
     [
-        [1, 1, -1],
-        [1, 0, 1],
-        [1, -1, -1],
-        [-1, 1, 1],
-        [-1, 0, -1],
-        [-1, -1, 1]
+        [8, 0, -8],
+        [8, 0, 8],
+        [0, -8, -8],
+        [0, -8, 8]
     ], 
     
     [
-        [[0,1,2], "blue"],
-        [[3,4,5], "red"]
+        [[0,1,2], "mirror"],
+        [[1,2,3], "mirror"]
     ]
 ];
 const cube = [
@@ -62,23 +60,27 @@ const cube = [
         [[3, 5, 7], "yellow"]
     ]
 ];
-const objectList = [emptySet, cube];
+const objectList = [emptySet, cube, testTriangles];
 
 refreshScreen();
 
 // rendering stuff
 
-function ray(o, r) {
+function ray(o, r, triangleExclude) {
     var distCheck = Infinity;
     var nearestTriangle = [0,0];
+    var pointCheck = [0, 0, 0];
     for(let i=0; i<objectList.length; i++) {
         for(let j=0; j<((objectList[i][1]).length); j++) {
+            if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+                continue;
+            }
             var triangle = [
                 objectList[i][0][objectList[i][1][j][0][0]],
                 objectList[i][0][objectList[i][1][j][0][1]],
                 objectList[i][0][objectList[i][1][j][0][2]]
             ];
-            var n = vector3Normalize(cross(vector3Subtract(triangle[1], triangle[0]), vector3Subtract(triangle[2], triangle[0])));
+            var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
             var dotnr = dot(n, r);
             if (dotnr == 0) {
                 continue;
@@ -87,13 +89,27 @@ function ray(o, r) {
             if (dist <= 0) {
                 continue;
             }
-            if((dist < distCheck) && (isPointInTriangle(triangle, [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]]))) {
+            var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
+            if((dist < distCheck) && (isPointInTriangle(triangle, point))) {
+                pointCheck = [point[0], point[1], point[2]];
                 distCheck = dist;
                 nearestTriangle = [i,j];
             }
         }
     }
-    return objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
+    if (objectList[nearestTriangle[0]][1][nearestTriangle[1]][1] === "mirror") {
+        var triangle = [
+            objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][0]],
+            objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][1]],
+            objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][2]]
+        ];
+        var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
+        var reflectedVector = vector3Normalize(reflectVector3(r, n));
+        var color = ray([pointCheck[0]+reflectedVector[0]*tolerance, pointCheck[1]+reflectedVector[1]*tolerance, pointCheck[2]+reflectedVector[2]*tolerance], reflectedVector, nearestTriangle);
+        return color;
+    } else {
+        return objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
+    }
 }
 
 // math stuff
@@ -133,6 +149,12 @@ function rotToVector3(rot){
         Math.sin(rot[2])*Math.cos(rot[1]),
         Math.sin(rot[1])
     ];
+}
+
+function reflectVector3(vector, normal) {
+    // formula gotten from the wikipedia page for Specular reflection
+    var dot0 = dot(vector, normal);
+    return vector3Normalize(vector3Subtract(vector, [2*normal[0]*dot0, 2*normal[1]*dot0, 2*normal[2]*dot0]));
 }
 
 function rotateVector3(vector, rotation){
@@ -312,7 +334,7 @@ function castRays() {
     for (let i = 0; i < resolution; i++) {
         for (let j = 0; j < resolution; j++) {
             var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (4*i/resolution)-3]), playerRot);
-            var color = ray(playerPos, rayRot);
+            var color = ray(playerPos, rayRot, [0,0]);
             ctx.fillStyle = color;
             ctx.fillRect(j*(512/resolution), 512-i*(512/resolution), (j+1)*(512/resolution), 512-(i-1)*(512/resolution));
         }

@@ -5,7 +5,7 @@
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 const resolution = 512;
-const tolerance = 0.0000000001;
+const tolerance = 0.000000001;
 const rotationAmount = Math.PI/8;
 
 var playerPos = [-4, 0, 0];
@@ -17,7 +17,7 @@ const emptySet = [
     ], 
     
     [
-        [[0,0,0], "black"]
+        [[0,0,0], [0, 0, 0]]
     ]
 ];
 const testTriangles = [
@@ -46,22 +46,22 @@ const cube = [
     ],
 
     [
-        [[0, 2, 4], "white"],
-        [[2, 6, 4], "white"],
-        [[0, 1, 2], "red"],
-        [[1, 3, 2], "red"],
-        [[0, 4, 1], "blue"],
-        [[1, 4, 5], "blue"],
-        [[4, 6, 5], "orange"],
-        [[5, 6, 7], "orange"],
-        [[2, 3, 6], "green"],
-        [[3, 7, 6], "green"],
-        [[1, 5, 3], "yellow"],
-        [[3, 5, 7], "yellow"]
+        [[0, 2, 4], [255, 255, 255]],
+        [[2, 6, 4], [255, 255, 255]],
+        [[0, 1, 2], [255, 0, 0]],
+        [[1, 3, 2], [255, 0, 0]],
+        [[0, 4, 1], [0, 0, 255]],
+        [[1, 4, 5], [0, 0, 255]],
+        [[4, 6, 5], [255, 127, 0]],
+        [[5, 6, 7], [255, 127, 0]],
+        [[2, 3, 6], [0, 255, 0]],
+        [[3, 7, 6], [0, 255, 0]],
+        [[1, 5, 3], [255, 255, 0]],
+        [[3, 5, 7], [255, 255, 0]]
     ]
 ];
 const objectList = [emptySet, cube, testTriangles];
-const lightList = [[2, -2, 0]];
+const lightList = [[-2, -2, 2]];
 
 refreshScreen();
 
@@ -109,45 +109,18 @@ function ray(o, r, triangleExclude) {
         var reflectedVector = vector3Normalize(reflectVector3(r, normalCheck));
         var color = ray([pointCheck[0]+reflectedVector[0]*tolerance, pointCheck[1]+reflectedVector[1]*tolerance, pointCheck[2]+reflectedVector[2]*tolerance], reflectedVector, nearestTriangle);
         return color;
-    } else if ((nearestTriangle[0]!=triangleExclude[0])){
-        if(lightCheck([pointCheck[0]+normalCheck[0]*tolerance, pointCheck[1]+normalCheck[1]*tolerance, pointCheck[2]+normalCheck[2]*tolerance])) {
-            return objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
-        } else {
-            return "gray";
-        }
     } else {
-        return "black";
-    }
-}
-
-function lightCheck(o){
-    for(let h=0; h<lightList.length; h++) {
-        var r = vector3Subtract(o, lightList[h]);
-        var distCheck = Math.sqrt((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2]));
-        for(let i=0; i<objectList.length; i++) {
-            for(let j=0; j<((objectList[i][1]).length); j++) {
-                var triangle = [
-                    objectList[i][0][objectList[i][1][j][0][0]],
-                    objectList[i][0][objectList[i][1][j][0][1]],
-                    objectList[i][0][objectList[i][1][j][0][2]]
-                ];
-                var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
-                var dotnr = dot(n, r);
-                if (dotnr == 0) {
-                    continue;
-                }
-                var dist = -(dot(n, o)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dotnr;
-                if (dist <= 0) {
-                    continue;
-                }
-                var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
-                if((dist < distCheck) && (isPointInTriangle(triangle, point))) {
-                    return false;
-                }
+        var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
+        var lightDist = Infinity;
+        for(let h=0; h<lightList.length; h++) {
+            var r = vector3Subtract(pointCheck, lightList[h]);
+            var dist = Math.sqrt((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2]));
+            if(dist < lightDist) {
+                lightDist = dist;
             }
         }
+        return `rgb(${color[0]/(lightDist*lightDist)} ${color[1]/(lightDist*lightDist)} ${color[2]/(lightDist*lightDist)})`;
     }
-    return true;
 }
 
 // math stuff

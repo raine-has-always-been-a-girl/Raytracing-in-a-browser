@@ -1,6 +1,5 @@
 optimize the hell out of the isPointInTriangle function
 add optional gimbal lock toggle for camera movement
 add textures
-fix light
-add wider range of color
+fix light (calculate blocked paths and reflections)
 multithreading

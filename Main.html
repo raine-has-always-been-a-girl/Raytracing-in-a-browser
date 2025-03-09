@@ -61,7 +61,7 @@ const cube = [
     ]
 ];
 const objectList = [emptySet, cube, testTriangles];
-const lightList = [[-2, -2, 2]];
+const lightList = [[0, 0, 1]];
 
 refreshScreen();
 
@@ -112,14 +112,38 @@ function ray(o, r, triangleExclude) {
     } else {
         var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
         var lightDist = Infinity;
+        var lightRay = [0,0,0];
         for(let h=0; h<lightList.length; h++) {
             var r = vector3Subtract(pointCheck, lightList[h]);
             var dist = Math.sqrt((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2]));
             if(dist < lightDist) {
                 lightDist = dist;
+                lightRay = r;
             }
         }
-        return `rgb(${color[0]/(lightDist*lightDist)} ${color[1]/(lightDist*lightDist)} ${color[2]/(lightDist*lightDist)})`;
+        var light = (1/(lightDist*lightDist))*Math.cos(dot(vector3Normalize(lightRay), normalCheck))
+        color = linearToSRGB([
+            color[0]*light,
+            color[1]*light,
+            color[2]*light
+        ]);
+        return `rgb(${color[0]} ${color[1]} ${color[2]})`;
+    }
+}
+
+function linearToSRGB(color) {
+    if ((color[0]+color[1]+color[2])/3 <= 0.798354) {
+        return [
+            (color[0]*12.92),
+            (color[1]*12.92),
+            (color[2]*12.92)
+        ];
+    } else {
+        return [
+            ((((((color[0]+1)/256)**(1/2.4))*1.055)-0.055)*255),
+            ((((((color[1]+1)/256)**(1/2.4))*1.055)-0.055)*255),
+            ((((((color[2]+1)/256)**(1/2.4))*1.055)-0.055)*255)
+        ];
     }
 }
 

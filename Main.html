@@ -1,7 +1,12 @@
 <canvas id="window" width="512" height="512">
 </canvas>
 
+<img id="texture0" width="512" height="512" src="dark+parquet-512x512.bmp">
+
 <script>
+
+const texture0 = document.getElementById("texture0");
+
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 const resolution = 512;
@@ -22,10 +27,10 @@ const emptySet = [
 ];
 const testTriangles = [
     [
-        [8, 0, -8],
-        [8, 0, 8],
-        [0, -8, -8],
-        [0, -8, 8]
+        [3, 0, -3],
+        [3, 0, 3],
+        [0, -3, -3],
+        [0, -3, 3]
     ], 
     
     [
@@ -60,8 +65,35 @@ const cube = [
         [[3, 5, 7], [255, 255, 0]]
     ]
 ];
-const objectList = [emptySet, cube, testTriangles];
-const lightList = [[0, 0, 1]];
+const room = [
+[
+        [-6, -6, -6],
+        [-6, -6, 6],
+        [-6, 6, -6],
+        [-6, 6, 6],
+        [6, -6, -6],
+        [6, -6, 6],
+        [6, 6, -6],
+        [6, 6, 6]
+    ],
+
+    [
+        [[0, 2, 4], [255, 255, 255]],
+        [[2, 6, 4], [255, 255, 255]],
+        [[0, 1, 2], [255, 0, 0]],
+        [[1, 3, 2], [255, 0, 0]],
+        [[0, 4, 1], [0, 0, 255]],
+        [[1, 4, 5], [0, 0, 255]],
+        [[4, 6, 5], [255, 127, 0]],
+        [[5, 6, 7], [255, 127, 0]],
+        [[2, 3, 6], [0, 255, 0]],
+        [[3, 7, 6], [0, 255, 0]],
+        [[1, 5, 3], [255, 255, 0]],
+        [[3, 5, 7], [255, 255, 0]]
+    ]
+];
+const objectList = [emptySet, cube, room, testTriangles];
+const lightList = [[0, 0, 2, 4]];
 
 refreshScreen();
 
@@ -100,34 +132,44 @@ function ray(o, r, triangleExclude) {
             }
         }
     }
-    if (objectList[nearestTriangle[0]][1][nearestTriangle[1]][1] === "mirror") {
-        var triangle = [
-            objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][0]],
-            objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][1]],
-            objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][2]]
-        ];
-        var reflectedVector = vector3Normalize(reflectVector3(r, normalCheck));
-        var color = ray([pointCheck[0]+reflectedVector[0]*tolerance, pointCheck[1]+reflectedVector[1]*tolerance, pointCheck[2]+reflectedVector[2]*tolerance], reflectedVector, nearestTriangle);
-        return color;
-    } else {
-        var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
-        var lightDist = Infinity;
-        var lightRay = [0,0,0];
-        for(let h=0; h<lightList.length; h++) {
-            var r = vector3Subtract(pointCheck, lightList[h]);
-            var dist = Math.sqrt((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2]));
-            if(dist < lightDist) {
-                lightDist = dist;
-                lightRay = r;
+    switch (objectList[nearestTriangle[0]][1][nearestTriangle[1]][1]) {
+        case "mirror":
+            var triangle = [
+                objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][0]],
+                objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][1]],
+                objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][2]]
+            ];
+            var reflectedVector = vector3Normalize(reflectVector3(r, normalCheck));
+            var color = ray([pointCheck[0]+reflectedVector[0]*tolerance, pointCheck[1]+reflectedVector[1]*tolerance, pointCheck[2]+reflectedVector[2]*tolerance], reflectedVector, nearestTriangle);
+            return color;
+
+        case "texture":
+            var texture = objectList[nearestTriangle[0]][1][nearestTriangle[1]][2];
+            var textureCoordinates = objectList[nearestTriangle[0]][1][nearestTriangle[1]][3];
+            // ctx.drawImage();
+            break;
+
+        default:
+            var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
+            var lightDist = Infinity;
+            var lightRay = [0,0,0];
+            var lightIntensity = 0;
+            for(let h=0; h<lightList.length; h++) {
+                var r = vector3Subtract(pointCheck, lightList[h]);
+                var dist = Math.sqrt((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2]));
+                if(dist < lightDist) {
+                    lightDist = dist;
+                    lightRay = r;
+                    lightIntensity = lightList[h][3];
+                }
             }
-        }
-        var light = (1/(lightDist*lightDist))*Math.cos(dot(vector3Normalize(lightRay), normalCheck))
-        color = linearToSRGB([
-            color[0]*light,
-            color[1]*light,
-            color[2]*light
-        ]);
-        return `rgb(${color[0]} ${color[1]} ${color[2]})`;
+            var light = (lightIntensity/(lightDist*lightDist))*Math.cos(dot(vector3Normalize(lightRay), normalCheck))
+            color = linearToSRGB([
+                color[0]*light,
+                color[1]*light,
+                color[2]*light
+            ]);
+            return `rgb(${color[0]} ${color[1]} ${color[2]})`;
     }
 }
 

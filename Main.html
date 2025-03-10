@@ -93,7 +93,7 @@ const room = [
     ]
 ];
 const objectList = [emptySet, cube, room, testTriangles];
-const lightList = [[0, 0, 2, 4]];
+const lightList = [[0, 0, 3, 4]];
 
 refreshScreen();
 
@@ -151,26 +151,57 @@ function ray(o, r, triangleExclude) {
 
         default:
             var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
-            var lightDist = Infinity;
-            var lightRay = [0,0,0];
-            var lightIntensity = 0;
-            for(let h=0; h<lightList.length; h++) {
-                var r = vector3Subtract(pointCheck, lightList[h]);
-                var dist = Math.sqrt((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2]));
-                if(dist < lightDist) {
-                    lightDist = dist;
-                    lightRay = r;
-                    lightIntensity = lightList[h][3];
-                }
-            }
-            var light = (lightIntensity/(lightDist*lightDist))*Math.cos(dot(vector3Normalize(lightRay), normalCheck))
-            color = linearToSRGB([
+            var light = calculateLight(pointCheck, normalCheck, [nearestTriangle[0], nearestTriangle[1]]);
+            color = [
                 color[0]*light,
                 color[1]*light,
                 color[2]*light
-            ]);
-            return `rgb(${color[0]} ${color[1]} ${color[2]})`;
+            ];
+            return color;
     }
+}
+
+function calculateLight(point, normal, triangleExclude){
+    var light = 0;
+    for(let h=0; h<lightList.length; h++) {
+        var r = vector3Subtract(lightList[h], point);
+        if(!shadowCheck(point, r, [triangleExclude[0], triangleExclude[1]])) {
+            light = light+((lightList[h][3]/((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2])))*Math.cos(dot(vector3Normalize(r), normal)));
+        } else {
+            light = 0.01;
+        }
+    }
+    return light;
+}
+
+function shadowCheck(o, r, triangleExclude) {
+    var distCheck = 1;
+    for(let i=0; i<objectList.length; i++) {
+        for(let j=0; j<((objectList[i][1]).length); j++) {
+            if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+                continue;
+            }
+            var triangle = [
+                objectList[i][0][objectList[i][1][j][0][0]],
+                objectList[i][0][objectList[i][1][j][0][1]],
+                objectList[i][0][objectList[i][1][j][0][2]]
+            ];
+            var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
+            var dotnr = dot(n, r);
+            if (dotnr == 0) {
+                continue;
+            }
+            var dist = -(dot(n, o)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dotnr;
+            if (dist <= 0) {
+                continue;
+            }
+            var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
+            if((dist < distCheck) && (isPointInTriangle(triangle, point))) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 function linearToSRGB(color) {
@@ -412,6 +443,8 @@ function castRays() {
         for (let j = 0; j < resolution; j++) {
             var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (4*i/resolution)-3]), playerRot);
             var color = ray(playerPos, rayRot, [0,0]);
+            color = linearToSRGB(color);
+            color = `rgb(${color[0]} ${color[1]} ${color[2]})`
             ctx.fillStyle = color;
             ctx.fillRect(j*(512/resolution), 512-i*(512/resolution), (j+1)*(512/resolution), 512-(i-1)*(512/resolution));
         }

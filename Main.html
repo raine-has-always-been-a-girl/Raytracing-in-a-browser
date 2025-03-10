@@ -1,7 +1,7 @@
 <canvas id="window" width="512" height="512">
 </canvas>
 
-<img id="texture0" width="512" height="512" src="dark+parquet-512x512.bmp">
+<!-- <img id="texture0" width="512" height="512" src="dark+parquet-512x512.bmp"> -->
 
 <script>
 
@@ -175,7 +175,6 @@ function calculateLight(point, normal, triangleExclude){
 }
 
 function shadowCheck(o, r, triangleExclude) {
-    var distCheck = 1;
     for(let i=0; i<objectList.length; i++) {
         for(let j=0; j<((objectList[i][1]).length); j++) {
             if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
@@ -192,11 +191,11 @@ function shadowCheck(o, r, triangleExclude) {
                 continue;
             }
             var dist = -(dot(n, o)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dotnr;
-            if (dist <= 0) {
+            if (dist <= tolerance) {
                 continue;
             }
             var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
-            if((dist < distCheck) && (isPointInTriangle(triangle, point))) {
+            if((dist < 1) && (isPointInTriangle(triangle, point))) {
                 return true;
             }
         }
@@ -219,6 +218,15 @@ function linearToSRGB(color) {
         ];
     }
 }
+
+
+
+
+
+
+
+
+
 
 // math stuff
 
@@ -363,6 +371,15 @@ function isPointInTriangle(triangle, point){
         return false;
     }
 }
+
+
+
+
+
+
+
+
+
 
 // window stuff
 

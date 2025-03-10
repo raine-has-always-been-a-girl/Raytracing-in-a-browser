@@ -5,11 +5,11 @@
 
 <script>
 
-const texture0 = document.getElementById("texture0");
+// const texture0 = document.getElementById("texture0");
 
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-const resolution = 512;
+const resolution = 256;
 const tolerance = 0.000000001;
 const rotationAmount = Math.PI/8;
 
@@ -93,7 +93,7 @@ const room = [
     ]
 ];
 const objectList = [emptySet, cube, room, testTriangles];
-const lightList = [[0, 0, 3, 4]];
+const lightList = [[-3, -3, 3, 4]];
 
 refreshScreen();
 
@@ -458,12 +458,12 @@ window.addEventListener("keypress", function (event) {
 function castRays() {
     for (let i = 0; i < resolution; i++) {
         for (let j = 0; j < resolution; j++) {
-            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (4*i/resolution)-3]), playerRot);
+            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (2*i/resolution)-1]), playerRot);
             var color = ray(playerPos, rayRot, [0,0]);
             color = linearToSRGB(color);
             color = `rgb(${color[0]} ${color[1]} ${color[2]})`
             ctx.fillStyle = color;
-            ctx.fillRect(j*(512/resolution), 512-i*(512/resolution), (j+1)*(512/resolution), 512-(i-1)*(512/resolution));
+            ctx.fillRect(j*(512/resolution), 0, (j+1)*(512/resolution), (512-(i)*(512/resolution)))/2;
         }
     }
 }

@@ -34,8 +34,8 @@ const testTriangles = [
     ], 
     
     [
-        [[0,1,2], "mirror"],
-        [[1,2,3], "mirror"]
+        [[3,1,0], "mirror"],
+        [[3,0,2], "mirror"]
     ]
 ];
 const cube = [
@@ -93,7 +93,7 @@ const room = [
     ]
 ];
 const objectList = [emptySet, cube, room, testTriangles];
-const lightList = [[-3, -3, 3, 4]];
+const lightList = [[-3, 3, 3, 4]];
 
 refreshScreen();
 
@@ -167,8 +167,31 @@ function calculateLight(point, normal, triangleExclude){
         var r = vector3Subtract(lightList[h], point);
         if(!shadowCheck(point, r, [triangleExclude[0], triangleExclude[1]])) {
             light = light+((lightList[h][3]/((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2])))*Math.cos(dot(vector3Normalize(r), normal)));
-        } else {
-            light = 0.01;
+        }
+        for(let i=0; i<objectList.length; i++) {
+            for(let j=0; j<((objectList[i][1]).length); j++) {
+                if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+                    continue;
+                }
+                if (objectList[i][1][j][1] === "mirror"){
+                    var triangle = [
+                        objectList[i][0][objectList[i][1][j][0][0]],
+                        objectList[i][0][objectList[i][1][j][0][1]],
+                        objectList[i][0][objectList[i][1][j][0][2]]
+                    ];
+                    var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
+                    var reflectedLight = vector3Subtract(triangle[0], reflectVector3(vector3Subtract(triangle[0], lightList[h]), n));
+                    var dist = Math.sqrt(((reflectedLight[0]-point[0])**2)+((reflectedLight[1]-point[1])**2)+((reflectedLight[2]-point[2])**2));
+                    var r = vector3Normalize(vector3Subtract(reflectedLight, point));
+                    var distA = (-(dot(n, point)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dot(n, r))-tolerance;
+                    var reflectionPoint = [(point[0]+distA*r[0])+(n[0]*tolerance), (point[1]+distA*r[1])+(n[1]*tolerance), (point[2]+distA*r[2])+(n[2]*tolerance)];
+                    if(isPointInTriangle(triangle, reflectionPoint)) {
+                        if((!shadowCheck(reflectionPoint, vector3Subtract(lightList[h], reflectionPoint), [i,j])) && (!shadowCheck(point, vector3Subtract(reflectionPoint, point), [i,j]))) {
+                            light = light+((lightList[h][3]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
+                        }
+                    }
+                }
+            }
         }
     }
     return light;
@@ -191,7 +214,7 @@ function shadowCheck(o, r, triangleExclude) {
                 continue;
             }
             var dist = -(dot(n, o)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dotnr;
-            if (dist <= tolerance) {
+            if (dist <= tolerance*2) {
                 continue;
             }
             var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
@@ -250,8 +273,16 @@ function vector3Subtract(a, b){
     ];
 }
 
+function vector3Add(a, b){
+    return [
+        a[0]+b[0],
+        a[1]+b[1],
+        a[2]+b[2]
+    ];
+}
+
 function vector3Normalize(v) {
-    var mag = Math.sqrt((v[0]*v[0])+(v[1]*v[1])+(v[2]*v[2]));
+    var mag = Math.sqrt((v[0]**2)+(v[1]**2)+(v[2]**2));
     return [
         v[0]/mag,
         v[1]/mag,
@@ -270,7 +301,7 @@ function rotToVector3(rot){
 function reflectVector3(vector, normal) {
     // formula gotten from the wikipedia page for Specular reflection
     var dot0 = dot(vector, normal);
-    return vector3Normalize(vector3Subtract(vector, [2*normal[0]*dot0, 2*normal[1]*dot0, 2*normal[2]*dot0]));
+    return vector3Subtract(vector, [2*normal[0]*dot0, 2*normal[1]*dot0, 2*normal[2]*dot0]);
 }
 
 function rotateVector3(vector, rotation){

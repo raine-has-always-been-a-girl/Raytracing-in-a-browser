@@ -11,6 +11,7 @@ const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 const resolution = 256;
 const tolerance = 0.000000001;
+const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 
 var playerPos = [-4, 0, 0];
@@ -163,13 +164,22 @@ function ray(o, r, triangleExclude) {
 
 function calculateLight(point, normal, triangleExclude){
     var light = 0;
+    light = light + directLight(point, normal, triangleExclude);
+    light = light + indirectLight(point, normal, triangleExclude);
+    return light;
+}
+
+function directLight(point, normal, triangleExclude) {
+    var light = 0;
     for(let h=0; h<lightList.length; h++) {
         var r = vector3Subtract(lightList[h], point);
-        if(!shadowCheck(point, r, [triangleExclude[0], triangleExclude[1]])) {
+        if(!shadowCheck(point, r, triangleExclude)) {
             light = light+((lightList[h][3]/((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2])))*Math.cos(dot(vector3Normalize(r), normal)));
         }
     }
-    light = light + indirectLight(point, normal, triangleExclude);
+    if (light < minimumLightValue) {
+        light = minimumLightValue;
+    }
     return light;
 }
 
@@ -178,10 +188,9 @@ function indirectLight(point, normal, triangleExclude) {
     for(let h=0; h<lightList.length; h++) {
         for(let i=0; i<objectList.length; i++) {
             for(let j=0; j<((objectList[i][1]).length); j++) {
-                if (objectList[i][1][j][1] === "mirror"){
-                    if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+                if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
                         continue;
-                    }
+                } else if (objectList[i][1][j][1] === "mirror") {
                     var triangle = [
                         objectList[i][0][objectList[i][1][j][0][0]],
                         objectList[i][0][objectList[i][1][j][0][1]],
@@ -198,6 +207,8 @@ function indirectLight(point, normal, triangleExclude) {
                             light = light+((lightList[h][3]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
                         }
                     }
+                } else {
+                    // difuse reflection code
                 }
             }
         }
@@ -223,7 +234,7 @@ function shadowCheck(o, r, triangleExclude) {
                 continue;
             }
             var dist = -(dot(n, o)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dotnr;
-            if (dist <= tolerance*2) {
+            if (dist <= tolerance) {
                 continue;
             }
             var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];

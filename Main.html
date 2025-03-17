@@ -168,12 +168,20 @@ function calculateLight(point, normal, triangleExclude){
         if(!shadowCheck(point, r, [triangleExclude[0], triangleExclude[1]])) {
             light = light+((lightList[h][3]/((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2])))*Math.cos(dot(vector3Normalize(r), normal)));
         }
+    }
+    light = light + indirectLight(point, normal, triangleExclude);
+    return light;
+}
+
+function indirectLight(point, normal, triangleExclude) {
+    var light = 0;
+    for(let h=0; h<lightList.length; h++) {
         for(let i=0; i<objectList.length; i++) {
             for(let j=0; j<((objectList[i][1]).length); j++) {
-                if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
-                    continue;
-                }
                 if (objectList[i][1][j][1] === "mirror"){
+                    if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+                        continue;
+                    }
                     var triangle = [
                         objectList[i][0][objectList[i][1][j][0][0]],
                         objectList[i][0][objectList[i][1][j][0][1]],
@@ -196,6 +204,7 @@ function calculateLight(point, normal, triangleExclude){
     }
     return light;
 }
+
 
 function shadowCheck(o, r, triangleExclude) {
     for(let i=0; i<objectList.length; i++) {

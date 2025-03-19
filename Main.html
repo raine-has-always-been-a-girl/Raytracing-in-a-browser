@@ -423,6 +423,90 @@ function isPointInTriangle(triangle, point){
     }
 }
 
+function iCantThinkOfANameForThisFunction(c, s) {
+    var out = Math.atan(Math.tan(c)*Math.sin(s));
+    if (Math.cos(c) < 0) {
+        var f = Math.PI;
+        if (Math.sin(c) < 0) {
+            f = -f;
+        }
+        out = out-f;
+    }
+    return out;
+}
+
+function turnRot3(rotation, turnAngle) {
+    var a = rotation[0] + turnAngle;
+    var f1 = 0;
+    var f2 = 0;
+    if (cosa <= 0) {
+        f1 = Math.PI;
+        f2 = Math.PI;
+        if (rotation[1] < 0) {
+            f1 = -f1;
+            f2 = -f2;
+        }
+        if (a <= 0) {
+            f1 = -f1;
+        }
+    }
+    var cosa = Math.cos(a);
+    var sina = Math.sin(a);
+    var cota;
+    if (sina == 0) {
+        cota = Infinity;
+    } else {
+        cota = cosa/sina;
+    }
+    var g;
+    if (cota == 0) {
+        g = Math.PI/2;
+    } else {
+        g = Math.atan(Math.sin(rotation[1])/cota);
+    }
+    g = g+f1;
+    var s = Math.acos(cosa/Math.cos(g));
+    if (a <= 0) {
+        s = -s
+    }
+    var coss = Math.cos(s);
+    var sins = Math.sin(s);
+    var p = Math.asin(Math.sin(rotation[1])/coss);
+    if (coss < 0) {
+        p = -p;
+    }
+    var q = p;
+    if (sins < 0) {
+        q = -q;
+    }
+    p = p+f2;
+    q = q+f2;
+    var b = rotationAmount;
+    if (coss < 0) {
+        b = -rotationAmount;
+    }
+    var d = b;
+    if (sins < 0) {
+        b = -b;
+    }
+    var newRot3 = [
+        Math.acos(Math.cos(iCantThinkOfANameForThisFunction(q+b, s))*coss),
+        Math.asin(Math.sin(p+d)*coss),
+        iCantThinkOfANameForThisFunction(p+d, s)-iCantThinkOfANameForThisFunction(p, s)
+    ];
+    if (sins < 0) {
+        newRot3[0] = -newRot3[0];
+    }
+    if (coss < 0) {
+        newRot3[1] = -newRot3[1];
+        newRot3[2] = -newRot3[2];
+    }
+    newRot3[2] = -newRot3[2];
+    newRot3[0] = newRot3[0]-turnAngle;
+    newRot3[2] = newRot3[2]+rotation[2];
+    return newRot3;
+}
+
 
 
 
@@ -483,25 +567,24 @@ window.addEventListener("keypress", function (event) {
             playerRot[0] = playerRot[0]+rotationAmount;
             break;
         case "i": // pitch up
-            playerRot[1] = playerRot[1]+rotationAmount;
+            playerRot = turnRot3(playerRot, 0);
             break;
         case "o": // roll right
             playerRot[0] = playerRot[0]-rotationAmount;
             break;
         case "j": // yaw left
-            playerRot[2] = playerRot[2]-rotationAmount;
+            playerRot = turnRot3(playerRot, Math.PI/2);
             break;
         case "k": // pitch down
-            playerRot[1] = playerRot[1]-rotationAmount;
+            playerRot = turnRot3(playerRot, Math.PI);
             break;
         case "l": // yaw left
-            playerRot[2] = playerRot[2]+rotationAmount;
+            playerRot = turnRot3(playerRot, -Math.PI/2);
             break;
 
         default:
             return;
     }
-
     event.preventDefault();
     refreshScreen();
 }, true);

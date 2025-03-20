@@ -443,38 +443,54 @@ function turnRot3(rotation, turnAngle) {
     var cosa = Math.cos(a);
     var sina = Math.sin(a);
     var cota;
-    if (sina == 0) {
+    if ((sina <= tolerance) && (sina >= -tolerance)) {
         cota = Infinity;
     } else {
         cota = cosa/sina;
     }
-    var g;
-    if (cota == 0) {
-        g = Math.PI/2;
+    var s;
+    var p;
+    var coss;
+    var sins;
+    if ((cosa <= tolerance) && (cosa >= -tolerance)) {
+        p = Math.PI/2;
+        s = Math.acos(Math.sin(rotation[1]))
+        if (sina <= 0) {
+            s = -s;
+        }
+        coss = Math.cos(s);
+        sins = Math.sin(s);
+        if (Math.sin(rotation[1]) < 0) {
+            p = -p;
+        }
+        if (coss < 0) {
+            p = -p;
+        }
     } else {
-        g = Math.atan(Math.sin(rotation[1])/cota);
-    }
-    var s = Math.acos(cosa/Math.cos(g));
-    if (a <= 0) {
-        s = -s
-    }
-    var coss = Math.cos(s);
-    var sins = Math.sin(s);
-    var p = Math.asin(Math.sin(rotation[1])/coss);
-    if (coss < 0) {
-        p = -p;
-    }
-    var q = p;
-    if (sins < 0) {
-        q = -q;
+        // var g = Math.atan(Math.sin(rotation[1])/cota);
+        // s = Math.acos(cosa/Math.cos(g));
+        s = Math.acos(cosa/Math.cos(Math.atan(Math.sin(rotation[1])/cota)));
+        if (sina <= 0) {
+            s = -s;
+        }
+        coss = Math.cos(s);
+        sins = Math.sin(s);
+        if ((coss <= tolerance) && (coss >= -tolerance)) {
+            p = Math.PI/2;
+        } else {
+            p = Math.asin(Math.sin(rotation[1])/coss);
+        }
     }
     var b = rotationAmount;
     if (coss < 0) {
-        b = -rotationAmount;
+        p = -p;
+        b = -b;
     }
+    var q = p;
     var d = b;
     if (sins < 0) {
         b = -b;
+        q = -q;
     }
     var newRot3 = [
         Math.acos(Math.cos(iCantThinkOfANameForThisFunction(q+b, s))*coss),

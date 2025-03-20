@@ -7,3 +7,4 @@ multithreading
 known bugs
 there is a gap between where two triangles meet
 the top right center pixel is always black
+yaw Left and yaw right are buggy af, major reworking needed

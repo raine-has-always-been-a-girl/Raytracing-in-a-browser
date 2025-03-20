@@ -439,20 +439,7 @@ function iCantThinkOfANameForThisFunction(c, s) {
 }
 
 function turnRot3(rotation, turnAngle) {
-    var a = rotation[0] + turnAngle;
-    var f1 = 0;
-    var f2 = 0;
-    if (cosa <= 0) {
-        f1 = Math.PI;
-        f2 = Math.PI;
-        if (rotation[1] < 0) {
-            f1 = -f1;
-            f2 = -f2;
-        }
-        if (a <= 0) {
-            f1 = -f1;
-        }
-    }
+    var a = rotation[0]+turnAngle;
     var cosa = Math.cos(a);
     var sina = Math.sin(a);
     var cota;
@@ -467,7 +454,6 @@ function turnRot3(rotation, turnAngle) {
     } else {
         g = Math.atan(Math.sin(rotation[1])/cota);
     }
-    g = g+f1;
     var s = Math.acos(cosa/Math.cos(g));
     if (a <= 0) {
         s = -s
@@ -482,8 +468,6 @@ function turnRot3(rotation, turnAngle) {
     if (sins < 0) {
         q = -q;
     }
-    p = p+f2;
-    q = q+f2;
     var b = rotationAmount;
     if (coss < 0) {
         b = -rotationAmount;

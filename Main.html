@@ -13,6 +13,7 @@ const resolution = 256;
 const tolerance = 0.000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
+const renderLight = true;
 
 var playerPos = [-4, 0, 0];
 var playerRot = [0, 0, 0];
@@ -94,7 +95,7 @@ const room = [
     ]
 ];
 const objectList = [emptySet, cube, room, testTriangles];
-const lightList = [[-3, 3, 3, 4]];
+const lightList = [[-6, 6, 6, 16]];
 
 refreshScreen();
 
@@ -152,12 +153,14 @@ function ray(o, r, triangleExclude) {
 
         default:
             var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
-            var light = calculateLight(pointCheck, normalCheck, [nearestTriangle[0], nearestTriangle[1]]);
-            color = [
-                color[0]*light,
-                color[1]*light,
-                color[2]*light
-            ];
+            if (renderLight){
+                var light = calculateLight(pointCheck, normalCheck, [nearestTriangle[0], nearestTriangle[1]]);
+                color = [
+                    color[0]*light,
+                    color[1]*light,
+                    color[2]*light
+                ];
+            }
             return color;
     }
 }

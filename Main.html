@@ -452,24 +452,25 @@ function turnRot3(rotation, turnAngle) {
     var p;
     var coss;
     var sins;
+    var siny = Math.sin(rotation[1]);
     if ((cosa <= tolerance) && (cosa >= -tolerance)) {
         p = Math.PI/2;
-        s = Math.acos(Math.sin(rotation[1]))
+        s = Math.acos(siny)
         if (sina <= 0) {
             s = -s;
         }
         coss = Math.cos(s);
         sins = Math.sin(s);
-        if (Math.sin(rotation[1]) < 0) {
+        if (siny < 0) {
             p = -p;
         }
         if (coss < 0) {
             p = -p;
         }
     } else {
-        // var g = Math.atan(Math.sin(rotation[1])/cota);
+        // var g = Math.atan(siny/cota);
         // s = Math.acos(cosa/Math.cos(g));
-        s = Math.acos(cosa/Math.cos(Math.atan(Math.sin(rotation[1])/cota)));
+        s = Math.acos(cosa/Math.cos(Math.atan(siny/cota)));
         if (sina <= 0) {
             s = -s;
         }
@@ -478,7 +479,7 @@ function turnRot3(rotation, turnAngle) {
         if ((coss <= tolerance) && (coss >= -tolerance)) {
             p = Math.PI/2;
         } else {
-            p = Math.asin(Math.sin(rotation[1])/coss);
+            p = Math.asin(siny/coss);
         }
     }
     var b = rotationAmount;

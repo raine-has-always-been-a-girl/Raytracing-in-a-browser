@@ -283,6 +283,9 @@ function indirectLight(point, normal, triangleExclude) {
 
 function shadowCheck(o, r, triangleExclude) {
     for(let i=0; i<objectList.length; i++) {
+        if (rayBoxIntersection(o,r, objectList[i][2]) == Infinity) {
+            continue;
+        }
         for(let j=0; j<((objectList[i][1]).length); j++) {
             if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
                 continue;
@@ -391,11 +394,20 @@ function reflectVector3(vector, normal) {
 function rotateVector3(vector, rotation){
     var mag = Math.sqrt((vector[1]*vector[1])+(vector[2]*vector[2]));
     var rot = 0;
-    if (vector[2] > 0) {
-        rot = Math.acos(vector[1]/mag);
+    if (mag != 0) {
+        if (vector[2] > 0) {
+            rot = Math.acos(vector[1]/mag);
+        } else {
+            rot = -Math.acos(vector[1]/mag);
+        }
     } else {
-        rot = -Math.acos(vector[1]/mag);
+        if (vector[2] > 0) {
+            rot = Math.acos(vector[1]);
+        } else {
+            rot = -Math.acos(vector[1]);
+        }
     }
+
     var newVector3 = [
         vector[0],
         Math.cos(rot+rotation[0])*mag,
@@ -615,7 +627,7 @@ function rayBoxIntersection(o, r, box) {
     if (Max[2] < Far) {
         Far = Max[2];
     }
-    if ((Close <= Far) && (Close > 0)) {
+    if ((Close <= Far+tolerance)) {
         return Close;
     } else {
         return Infinity;

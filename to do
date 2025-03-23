@@ -6,5 +6,3 @@ multithreading
 
 known bugs
 there is a gap between where two triangles meet
-the top right center pixel is always black
-bounding volume check returns false when ray origin is inside bounding volume

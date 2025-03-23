@@ -1,9 +1,10 @@
-optimize the hell out of the isPointInTriangle function (while you're at it, fix the glitching at the edges of triangles in faces)
-add textures
+optimize bounding volumes with R-trees
 fix light (add indirect ilumination to more than mirrors)
 add color bleeding with indirect ilumination
+add textures
 multithreading
 
 known bugs
 there is a gap between where two triangles meet
 the top right center pixel is always black
+bounding volume check returns false when ray origin is inside bounding volume

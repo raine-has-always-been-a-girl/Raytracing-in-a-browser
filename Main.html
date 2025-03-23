@@ -9,7 +9,7 @@
 
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-const resolution = 256;
+const resolution = 128;
 const tolerance = 0.000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
@@ -18,16 +18,21 @@ const renderLight = true;
 var playerPos = [-4, 0, 0];
 var playerRot = [0, 0, 0];
 
-const emptySet = [
+var emptySet = [
     [
         [0,0,0]
     ], 
     
     [
         [[0,0,0], [0, 0, 0]]
+    ],
+
+    [
+        [0,0,0],
+        [0,0,0]
     ]
 ];
-const testTriangles = [
+var testTriangles = [
     [
         [3, 0, -3],
         [3, 0, 3],
@@ -38,9 +43,14 @@ const testTriangles = [
     [
         [[3,1,0], "mirror"],
         [[3,0,2], "mirror"]
+    ],
+
+    [
+        [0,0,0],
+        [0,0,0]
     ]
 ];
-const cube = [
+var cube = [
     [
         [-1, -1, -1],
         [-1, -1, 1],
@@ -65,10 +75,15 @@ const cube = [
         [[3, 7, 6], [0, 255, 0]],
         [[1, 5, 3], [255, 255, 0]],
         [[3, 5, 7], [255, 255, 0]]
+    ],
+
+    [
+        [0,0,0],
+        [0,0,0]
     ]
 ];
-const room = [
-[
+var room = [
+    [
         [-6, -6, -6],
         [-6, -6, 6],
         [-6, 6, -6],
@@ -92,14 +107,57 @@ const room = [
         [[3, 7, 6], [0, 255, 0]],
         [[1, 5, 3], [255, 255, 0]],
         [[3, 5, 7], [255, 255, 0]]
+    ],
+
+    [
+        [0,0,0],
+        [0,0,0]
     ]
 ];
 const objectList = [emptySet, cube, room, testTriangles];
 const lightList = [[-6, 6, 6, 16]];
 
+
+
+
+
+
+
+
+
+
+calculateBoundingVolumes()
 refreshScreen();
 
+
+
+
+
+
+
+
+
+
 // rendering stuff
+
+function calculateBoundingVolumes() {
+    for(let i=0; i<objectList.length; i++) {
+        var boxMax = [-Infinity, -Infinity, -Infinity];
+        var boxMin = [Infinity, Infinity, Infinity];
+        for(let j=0; j<((objectList[i][0]).length); j++) {
+            for(let k=0; k<3; k++) {
+                if (objectList[i][0][j][k] > boxMax[k]) {
+                    boxMax[k] = objectList[i][0][j][k];
+                }
+                if (objectList[i][0][j][k] < boxMin[k]) {
+                    boxMin[k] = objectList[i][0][j][k];
+                }
+            }
+        }
+        objectList[i][2] = [boxMin, boxMax];
+    }
+}
+
 
 function ray(o, r, triangleExclude) {
     var distCheck = Infinity;
@@ -107,6 +165,9 @@ function ray(o, r, triangleExclude) {
     var pointCheck = [0, 0, 0];
     var normalCheck = [0, 0, 0];
     for(let i=0; i<objectList.length; i++) {
+        if (rayBoxIntersection(o,r, objectList[i][2]) == Infinity) {
+            continue;
+        }
         for(let j=0; j<((objectList[i][1]).length); j++) {
             if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
                 continue;
@@ -509,6 +570,56 @@ function turnRot3(rotation, turnAngle) {
     newRot3[0] = newRot3[0]-turnAngle;
     newRot3[2] = newRot3[2]+rotation[2];
     return newRot3;
+}
+
+function rayBoxIntersection(o, r, box) {
+    var rNeg = vector3Subtract([0,0,0], r);
+    var Min = vector3Subtract(box[0], o);
+    var Max = vector3Subtract(box[1], o);
+    Min = [
+        Min[0]/r[0],
+        Min[1]/r[1],
+        Min[2]/r[2]
+    ];
+    Max = [
+        Max[0]/r[0],
+        Max[1]/r[1],
+        Max[2]/r[2]
+    ];
+    if (Min[0] > Max[0]) {
+        var temp = Max[0];
+        Max[0] = Min[0];
+        Min[0] = temp;
+    }
+    if (Min[1] > Max[1]) {
+        var temp = Max[1];
+        Max[1] = Min[1];
+        Min[1] = temp;
+    }
+    if (Min[2] > Max[2]) {
+        var temp = Max[2];
+        Max[2] = Min[2];
+        Min[2] = temp;
+    }
+    var Close = Min[0];
+    if (Min[1] > Close) {
+        Close = Min[1];
+    }
+    if (Min[2] > Close) {
+        Close = Min[2];
+    }
+    var Far = Max[0];
+    if (Max[1] < Far) {
+        Far = Max[1];
+    }
+    if (Max[2] < Far) {
+        Far = Max[2];
+    }
+    if ((Close <= Far) && (Close > 0)) {
+        return Close;
+    } else {
+        return Infinity;
+    }
 }
 
 

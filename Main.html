@@ -9,7 +9,7 @@
 
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-const resolution = 128;
+const resolution = 500;
 const tolerance = 0.000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
@@ -126,7 +126,7 @@ const lightList = [[-6, 6, 6, 16]];
 
 
 
-calculateBoundingVolumes()
+calculateBoundingVolumes();
 refreshScreen();
 
 

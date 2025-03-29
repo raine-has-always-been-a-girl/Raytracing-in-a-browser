@@ -1,10 +1,3 @@
-<canvas id="window" width="512" height="512">
-</canvas>
-
-<!-- <img id="texture0" width="512" height="512" src="dark+parquet-512x512.bmp"> -->
-<!-- <script src="worker.js"></script> -->
-<script>
-
 // const texture0 = document.getElementById("texture0");
 
 const canvas = document.getElementById("window");
@@ -14,7 +7,6 @@ const tolerance = 0.000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
-const threads = 4;
 
 var playerPos = [-4, 0, 0];
 var playerRot = [0, 0, 0];
@@ -126,11 +118,25 @@ const lightList = [[-6, 6, 6, 16]];
 
 
 
-// importScripts('worker.js');
-calculateBoundingVolumes();
-refreshScreen();
+let inactivityTimeout;
 
+function resetInactivityTimer() {
+  // Clear the previous timer (if any)
+  if (inactivityTimeout) {
+    clearTimeout(inactivityTimeout);
+  }
+  
+  // Set a new timer for 1 second of inactivity
+  inactivityTimeout = setTimeout(function() {
+    self.close(); 
+  }, 1000);
+}
 
+onmessage = function(event) {
+    postMessage({color:ray(event.o, event.r, event.te)});
+};
+
+resetInactivityTimer();
 
 
 
@@ -140,25 +146,6 @@ refreshScreen();
 
 
 // rendering stuff
-
-function calculateBoundingVolumes() {
-    for(let i=0; i<objectList.length; i++) {
-        var boxMax = [-Infinity, -Infinity, -Infinity];
-        var boxMin = [Infinity, Infinity, Infinity];
-        for(let j=0; j<((objectList[i][0]).length); j++) {
-            for(let k=0; k<3; k++) {
-                if (objectList[i][0][j][k] > boxMax[k]) {
-                    boxMax[k] = objectList[i][0][j][k];
-                }
-                if (objectList[i][0][j][k] < boxMin[k]) {
-                    boxMin[k] = objectList[i][0][j][k];
-                }
-            }
-        }
-        objectList[i][2] = [boxMin, boxMax];
-    }
-}
-
 
 function ray(o, r, triangleExclude) {
     var distCheck = Infinity;
@@ -358,6 +345,14 @@ function vector3Subtract(a, b){
         a[0]-b[0],
         a[1]-b[1],
         a[2]-b[2]
+    ];
+}
+
+function vector3Add(a, b){
+    return [
+        a[0]+b[0],
+        a[1]+b[1],
+        a[2]+b[2]
     ];
 }
 
@@ -626,120 +621,3 @@ function rayBoxIntersection(o, r, box) {
         return Infinity;
     }
 }
-
-
-
-
-
-
-
-
-
-
-// window stuff
-
-
-function rayWorker(i, j, o, r, te) {
-    const worker = new Worker('worker.js');
-    worker.postMessage({o: o, r: r, te: te});
-    worker.onmessage = function(event) {
-        var color = event.color;
-        color = linearToSRGB(color);
-        ctx.fillStyle = `rgb(${color[0]} ${color[1]} ${color[2]})`;
-        ctx.fillRect(j*(512/resolution), 0, (j+1)*(512/resolution), (512-(i)*(512/resolution)))/2;
-    };
-}
-
-
-// movement code
-window.addEventListener("keypress", function (event) {
-    
-    if (event.defaultPrevented) {
-        return; // Do nothing if the event was already processed
-    }
-
-    switch (event.key) {
-        case "q": // down
-            var up = upVector3(playerRot);
-            playerPos[0] = playerPos[0]+up[0];
-            playerPos[1] = playerPos[1]+up[1];
-            playerPos[2] = playerPos[2]-up[2];
-            break;
-        case "w": // forward
-            var cosr1 = Math.cos(playerRot[1]);
-            playerPos[0] = playerPos[0]+(Math.cos(playerRot[2])*cosr1);
-            playerPos[1] = playerPos[1]+(Math.sin(playerRot[2])*cosr1);
-            playerPos[2] = playerPos[2]+(Math.sin(playerRot[1]));
-            break;
-        case "e": // up
-            var up = upVector3(playerRot);
-            playerPos[0] = playerPos[0]-up[0];
-            playerPos[1] = playerPos[1]-up[1];
-            playerPos[2] = playerPos[2]+up[2];
-            break;
-        case "a":  // left
-            var cosr0 = Math.cos(playerRot[0]);
-            playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*cosr0);
-            playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*cosr0);
-            playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
-            break;
-        case "s": // back
-            var cosr1 = Math.cos(playerRot[1]);
-            playerPos[0] = playerPos[0]-(Math.cos(playerRot[2])*cosr1);
-            playerPos[1] = playerPos[1]-(Math.sin(playerRot[2])*cosr1);
-            playerPos[2] = playerPos[2]-(Math.sin(playerRot[1]));
-            break;
-        case "d": // right
-            var cosr0 = Math.cos(playerRot[0]);
-            playerPos[0] = playerPos[0]-(Math.sin(playerRot[2])*cosr0);
-            playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*cosr0);
-            playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
-            break;
-
-        case "u": // roll left
-            playerRot[0] = playerRot[0]+rotationAmount;
-            break;
-        case "i": // pitch up
-            playerRot = turnRot3(playerRot, 0);
-            break;
-        case "o": // roll right
-            playerRot[0] = playerRot[0]-rotationAmount;
-            break;
-        case "j": // yaw left
-            playerRot = turnRot3(playerRot, Math.PI/2);
-            break;
-        case "k": // pitch down
-            playerRot = turnRot3(playerRot, Math.PI);
-            break;
-        case "l": // yaw left
-            playerRot = turnRot3(playerRot, -Math.PI/2);
-            break;
-
-        default:
-            return;
-    }
-    event.preventDefault();
-    refreshScreen();
-}, true);
-
-function castRays() {
-    for (let i = 0; i < resolution; i++) {
-        for (let j = 0; j < resolution; j++) {
-            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (2*i/resolution)-1]), playerRot);
-            
-            // rayWorker(i, j, playerPos, rayRot, [0,0]);
-
-            var color = ray(playerPos, rayRot, [0,0]);
-            color = linearToSRGB(color);
-            color = `rgb(${color[0]} ${color[1]} ${color[2]})`
-            ctx.fillStyle = color;
-            ctx.fillRect(j*(512/resolution), 0, (j+1)*(512/resolution), (512-(i)*(512/resolution)))/2;
-        }
-    }
-}
-
-function refreshScreen() {
-    castRays();
-}
-
-</script>

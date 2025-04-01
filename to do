@@ -6,4 +6,3 @@ multithreading
 
 known bugs
 Strange artifacts when resolution is not a power of 2
-there is a gap between where two triangles meet

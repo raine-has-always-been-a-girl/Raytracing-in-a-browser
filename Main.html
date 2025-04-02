@@ -9,8 +9,8 @@
 
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-const resolution = 256;
-const tolerance = 0.000000001;
+const resolution = 128;
+const tolerance = 0.0000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
@@ -443,8 +443,33 @@ function upVector3(rotation){
     ];
 
     var mag = Math.sqrt((newVector3[0]*newVector3[0])+(newVector3[1]*newVector3[1]));
-    var rot;
     if (mag != 0) {
+        var rot;
+        if (newVector3[1] > 0) {
+            rot = Math.acos(newVector3[0]/mag);
+        } else {
+            rot = -Math.acos(newVector3[0]/mag);
+        }
+        newVector3 = [
+            Math.cos(rot+rotation[2])*mag,
+            Math.sin(rot+rotation[2])*mag,
+            newVector3[2]
+        ];
+    }
+    return newVector3;
+}
+
+function rightVector3(rotation){
+    var sinr0 = Math.sin(rotation[0]);
+    var newVector3 = [
+        -Math.sin(rotation[1])*sinr0,
+        Math.cos(rotation[0]),
+        Math.cos(rotation[1])*sinr0
+    ];
+
+    var mag = Math.sqrt((newVector3[0]*newVector3[0])+(newVector3[1]*newVector3[1]));
+    if (mag != 0) {
+        var rot;
         if (newVector3[1] > 0) {
             rot = Math.acos(newVector3[0]/mag);
         } else {
@@ -699,10 +724,10 @@ window.addEventListener("keypress", function (event) {
             playerPos[2] = playerPos[2]+up[2];
             break;
         case "a":  // left
-            var cosr0 = Math.cos(playerRot[0]);
-            playerPos[0] = playerPos[0]+(Math.sin(playerRot[2])*cosr0);
-            playerPos[1] = playerPos[1]-(Math.cos(playerRot[2])*cosr0);
-            playerPos[2] = playerPos[2]-(Math.sin(playerRot[0]));
+            var right = rightVector3(playerRot);
+            playerPos[0] = playerPos[0]-right[0];
+            playerPos[1] = playerPos[1]-right[1];
+            playerPos[2] = playerPos[2]-right[2];
             break;
         case "s": // back
             var cosr1 = Math.cos(playerRot[1]);
@@ -711,10 +736,10 @@ window.addEventListener("keypress", function (event) {
             playerPos[2] = playerPos[2]-(Math.sin(playerRot[1]));
             break;
         case "d": // right
-            var cosr0 = Math.cos(playerRot[0]);
-            playerPos[0] = playerPos[0]-(Math.sin(playerRot[2])*cosr0);
-            playerPos[1] = playerPos[1]+(Math.cos(playerRot[2])*cosr0);
-            playerPos[2] = playerPos[2]+(Math.sin(playerRot[0]));
+            var right = rightVector3(playerRot);
+            playerPos[0] = playerPos[0]+right[0];
+            playerPos[1] = playerPos[1]+right[1];
+            playerPos[2] = playerPos[2]+right[2];
             break;
 
         case "u": // roll left

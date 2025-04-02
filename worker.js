@@ -473,14 +473,35 @@ function isPointInTriangle(triangle, point){
     var spbc = (dbp+dbc+dcp)/2;
     var sapc = (dap+dcp+dca)/2;
     var sabp = (dab+dbp+dap)/2;
-    var abc = Math.sqrt(sabc*(sabc-dab)*(sabc-dbc)*(sabc-dca));
-    var pbc = Math.sqrt(spbc*(spbc-dbp)*(spbc-dbc)*(spbc-dcp));
-    var apc = Math.sqrt(sapc*(sapc-dap)*(sapc-dcp)*(sapc-dca));
-    var abp = Math.sqrt(sabp*(sabp-dab)*(sabp-dbp)*(sabp-dap));
-
-    var pabc = pbc+apc+abp;
-    
-    if (pabc <= abc+tolerance) {
+    var sqabc = (sabc*(sabc-dab)*(sabc-dbc)*(sabc-dca));
+    var sqpbc = (spbc*(spbc-dbp)*(spbc-dbc)*(spbc-dcp));
+    var sqapc = (sapc*(sapc-dap)*(sapc-dcp)*(sapc-dca));
+    var sqabp = (sabp*(sabp-dab)*(sabp-dbp)*(sabp-dap));
+    var abc;
+    var pbc;
+    var apc;
+    var abp;
+    if (sqabc > tolerance) {
+        abc = Math.sqrt(sqabc);
+    } else {
+        abc = 0;
+    }
+    if (sqpbc > tolerance) {
+        pbc = Math.sqrt(sqpbc);
+    } else {
+        pbc = 0;
+    }
+    if (sqapc > tolerance) {
+        apc = Math.sqrt(sqapc);
+    } else {
+        apc = 0;
+    }
+    if (sqabp > tolerance) {
+        abp = Math.sqrt(sqabp);
+    } else {
+        abp = 0;
+    }
+    if (pbc+apc+abp <= abc+tolerance) {
         return true;
     } else {
         return false;

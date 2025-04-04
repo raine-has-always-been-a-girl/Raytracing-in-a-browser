@@ -15,6 +15,9 @@ const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
 const threads = 4;
+const rayLimit = 16;
+
+var rayDepth;
 
 var playerPos = [-4, 0, 0];
 var playerRot = [0, 0, 0];
@@ -83,6 +86,7 @@ var cube = [
         [0,0,0]
     ]
 ];
+
 var room = [
     [
         [-6, -6, -6],
@@ -96,8 +100,8 @@ var room = [
     ],
 
     [
-        [[0, 2, 4], [255, 255, 255]],
-        [[2, 6, 4], [255, 255, 255]],
+        [[0, 2, 4], "portal", [0, 0, 12], 10],
+        [[2, 6, 4], "portal", [0, 0, 12], 11],
         [[0, 1, 2], [255, 0, 0]],
         [[1, 3, 2], [255, 0, 0]],
         [[0, 4, 1], [0, 0, 255]],
@@ -106,8 +110,8 @@ var room = [
         [[5, 6, 7], [255, 127, 0]],
         [[2, 3, 6], [0, 255, 0]],
         [[3, 7, 6], [0, 255, 0]],
-        [[1, 5, 3], [255, 255, 0]],
-        [[3, 5, 7], [255, 255, 0]]
+        [[1, 5, 3], "portal", [0, 0, -12], 0],
+        [[3, 5, 7], "portal", [0, 0, -12], 1]
     ],
 
     [
@@ -161,16 +165,20 @@ function calculateBoundingVolumes() {
 
 
 function ray(o, r, triangleExclude) {
+    rayDepth = rayDepth+1;
+    if (rayDepth > rayLimit) {
+        return [255, 0, 255];
+    }
     var distCheck = Infinity;
     var nearestTriangle = [0,0];
     var pointCheck = [0, 0, 0];
     var normalCheck = [0, 0, 0];
-    for(let i=0; i<objectList.length; i++) {
+    for(let i=1; i<objectList.length; i++) {
         if (rayBoxIntersection(o,r, objectList[i][2]) > distCheck) {
             continue;
         }
         for(let j=0; j<((objectList[i][1]).length); j++) {
-            if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+            if ((i == triangleExclude[0])&&(j == triangleExclude[1])){
                 continue;
             }
             var triangle = [
@@ -188,6 +196,7 @@ function ray(o, r, triangleExclude) {
                 continue;
             }
             var point = [o[0]+dist*r[0], o[1]+dist*r[1], o[2]+dist*r[2]];
+            
             if((dist <= distCheck+tolerance) && (isPointInTriangle(triangle, point))) {
                 normalCheck = n;
                 pointCheck = [point[0], point[1], point[2]];
@@ -212,6 +221,10 @@ function ray(o, r, triangleExclude) {
             var textureCoordinates = objectList[nearestTriangle[0]][1][nearestTriangle[1]][3];
             // ctx.drawImage();
             break;
+
+        case "portal":
+            // window.alert(pointCheck)
+            return ray(vector3Add(pointCheck, objectList[nearestTriangle[0]][1][nearestTriangle[1]][2]), r, [nearestTriangle[0], objectList[nearestTriangle[0]][1][nearestTriangle[1]][3]]);
 
         default:
             var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
@@ -358,6 +371,14 @@ function vector3Subtract(a, b){
         a[0]-b[0],
         a[1]-b[1],
         a[2]-b[2]
+    ];
+}
+
+function vector3Add(a, b){
+    return [
+        a[0]+b[0],
+        a[1]+b[1],
+        a[2]+b[2]
     ];
 }
 
@@ -771,6 +792,8 @@ window.addEventListener("keypress", function (event) {
 function castRays() {
     for (let i = 0; i < resolution; i++) {
         for (let j = 0; j < resolution; j++) {
+            rayDepth = 0;
+
             var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (2*i/resolution)-1]), playerRot);
             
             // rayWorker(i, j, playerPos, rayRot, [0,0]);

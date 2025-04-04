@@ -5,4 +5,5 @@ add textures
 multithreading
 
 known bugs
+rotation bug when looking straight down
 Strange artifacts when resolution is not a power of 2

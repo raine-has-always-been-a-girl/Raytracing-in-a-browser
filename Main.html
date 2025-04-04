@@ -560,7 +560,14 @@ function isPointInTriangle(triangle, point){
 }
 
 function iCantThinkOfANameForThisFunction(c, s) {
-    var out = Math.atan(Math.tan(c)*Math.sin(s));
+    var sins = Math.sin(s);
+    var out;
+    if ((sins <= tolerance) && (sins >= -tolerance)) {
+        out = 0
+    } else {
+        out = Math.atan(Math.tan(c)*sins);
+    }
+
     if (Math.cos(c) < 0) {
         var f = Math.PI;
         if (Math.sin(c) < 0) {
@@ -781,6 +788,10 @@ window.addEventListener("keypress", function (event) {
         case "l": // yaw left
             playerRot = turnRot3(playerRot, -Math.PI/2);
             break;
+
+        case " ":
+            window.alert(playerRot)
+
 
         default:
             return;

@@ -1,9 +1,8 @@
 optimize bounding volumes with R-trees
-fix light (add indirect ilumination to more than mirrors)
+add indirect ilumination to portals
 add color bleeding with indirect ilumination
 add textures
 multithreading
 
 known bugs
-rotation bug when looking straight down
 Strange artifacts when resolution is not a power of 2

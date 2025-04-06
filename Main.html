@@ -9,8 +9,8 @@
 
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-const resolution = 256;
-const tolerance = 0.000000001;
+const resolution = 128;
+const tolerance = 0.0001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
@@ -577,7 +577,7 @@ function iCantThinkOfANameForThisFunction(c, s) {
     return out;
 }
 
-function turnRot3(rotation, turnAngle) {
+function turnRot3(rotation, turnAngle, turnAmount) {
     var a = rotation[0]+turnAngle;
     var cosa = Math.cos(a);
     var sina = Math.sin(a);
@@ -628,7 +628,7 @@ function turnRot3(rotation, turnAngle) {
     if ((coss <= tolerance) && (coss >= -tolerance)) {
         coss = 0;
     }
-    var b = rotationAmount;
+    var b = turnAmount;
     if (coss <= tolerance) {
         p = -p;
         b = -b;
@@ -651,14 +651,14 @@ function turnRot3(rotation, turnAngle) {
         newRot3[1] = -newRot3[1];
         newRot3[2] = -newRot3[2];
     }
-
-    if ((cosy <= tolerance) && (cosy >= -tolerance) && (sins <= tolerance) && (sins >= -tolerance)) {
-        newRot3[2] = newRot3[2]-Math.asin(Math.sin(turnAngle));
-    }
  
     newRot3[2] = -newRot3[2];
     newRot3[0] = newRot3[0]-turnAngle;
     newRot3[2] = newRot3[2]+rotation[2];
+
+    if ((cosy <= tolerance) && (cosy >= -tolerance)) {
+        // bug fix needed
+    }
     return newRot3;
 }
 
@@ -737,6 +737,21 @@ function rayWorker(i, j, o, r, te) {
 
 
 // movement code
+canvas.addEventListener('click', function(event) {
+    const rect = canvas.getBoundingClientRect(); 
+    var x = (event.clientX - rect.left - 256)/256;
+    var y = 1-(event.clientY - rect.top)/256; 
+    var mag = Math.sqrt((x**2)+(y**2));
+    x = x/mag;
+    y = y/mag;
+    if (x > 0) {
+        playerRot = turnRot3(playerRot, -Math.acos(y), mag*Math.PI/4);
+    } else {
+        playerRot = turnRot3(playerRot, Math.acos(y), mag*Math.PI/4);
+    }
+    refreshScreen();
+});
+
 window.addEventListener("keypress", function (event) {
     
     if (event.defaultPrevented) {
@@ -785,19 +800,19 @@ window.addEventListener("keypress", function (event) {
             playerRot[0] = playerRot[0]+rotationAmount;
             break;
         case "i": // pitch up
-            playerRot = turnRot3(playerRot, 0);
+            playerRot = turnRot3(playerRot, 0, rotationAmount);
             break;
         case "o": // roll right
             playerRot[0] = playerRot[0]-rotationAmount;
             break;
         case "j": // yaw left
-            playerRot = turnRot3(playerRot, Math.PI/2);
+            playerRot = turnRot3(playerRot, Math.PI/2, rotationAmount);
             break;
         case "k": // pitch down
-            playerRot = turnRot3(playerRot, Math.PI);
+            playerRot = turnRot3(playerRot, Math.PI, rotationAmount);
             break;
         case "l": // yaw left
-            playerRot = turnRot3(playerRot, -Math.PI/2);
+            playerRot = turnRot3(playerRot, -Math.PI/2, rotationAmount);
             break;
 
         case " ":

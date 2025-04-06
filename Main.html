@@ -9,8 +9,8 @@
 
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
-const resolution = 128;
-const tolerance = 0.0000000001;
+const resolution = 256;
+const tolerance = 0.000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
@@ -120,7 +120,7 @@ var room = [
     ]
 ];
 const objectList = [emptySet, room, cube, testTriangles];
-const lightList = [[-6, 6, 6, 16]];
+const lightList = [[-6, 6, 0, 16]];
 
 
 
@@ -223,7 +223,6 @@ function ray(o, r, triangleExclude) {
             break;
 
         case "portal":
-            // window.alert(pointCheck)
             return ray(vector3Add(pointCheck, objectList[nearestTriangle[0]][1][nearestTriangle[1]][2]), r, [nearestTriangle[0], objectList[nearestTriangle[0]][1][nearestTriangle[1]][3]]);
 
         default:
@@ -593,25 +592,29 @@ function turnRot3(rotation, turnAngle) {
     var coss;
     var sins;
     var siny = Math.sin(rotation[1]);
+    var cosy = Math.cos(rotation[1]);
+    if ((siny <= tolerance) && (siny >= -tolerance)){
+        siny = 0;
+    }
     if ((cosa <= tolerance) && (cosa >= -tolerance)) {
         p = Math.PI/2;
-        s = Math.acos(siny)
-        if (sina <= 0) {
+        s = Math.acos(siny);
+        if (sina <= tolerance) {
             s = -s;
         }
         coss = Math.cos(s);
         sins = Math.sin(s);
-        if (siny < 0) {
+        if (siny <= tolerance) {
             p = -p;
         }
-        if (coss < 0) {
+        if (coss <= tolerance) {
             p = -p;
         }
     } else {
         // var g = Math.atan(siny/cota);
         // s = Math.acos(cosa/Math.cos(g));
         s = Math.acos(cosa/Math.cos(Math.atan(siny/cota)));
-        if (sina <= 0) {
+        if (sina <= tolerance) {
             s = -s;
         }
         coss = Math.cos(s);
@@ -622,14 +625,17 @@ function turnRot3(rotation, turnAngle) {
             p = Math.asin(siny/coss);
         }
     }
+    if ((coss <= tolerance) && (coss >= -tolerance)) {
+        coss = 0;
+    }
     var b = rotationAmount;
-    if (coss < 0) {
+    if (coss <= tolerance) {
         p = -p;
         b = -b;
     }
     var q = p;
     var d = b;
-    if (sins < 0) {
+    if (sins <= tolerance) {
         b = -b;
         q = -q;
     }
@@ -638,13 +644,18 @@ function turnRot3(rotation, turnAngle) {
         Math.asin(Math.sin(p+d)*coss),
         iCantThinkOfANameForThisFunction(p+d, s)-iCantThinkOfANameForThisFunction(p, s)
     ];
-    if (sins < 0) {
+    if (sins <= tolerance) {
         newRot3[0] = -newRot3[0];
     }
-    if (coss < 0) {
+    if (coss <= tolerance) {
         newRot3[1] = -newRot3[1];
         newRot3[2] = -newRot3[2];
     }
+
+    if ((cosy <= tolerance) && (cosy >= -tolerance) && (sins <= tolerance) && (sins >= -tolerance)) {
+        newRot3[2] = newRot3[2]-Math.asin(Math.sin(turnAngle));
+    }
+ 
     newRot3[2] = -newRot3[2];
     newRot3[0] = newRot3[0]-turnAngle;
     newRot3[2] = newRot3[2]+rotation[2];

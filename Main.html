@@ -571,12 +571,8 @@ function isPointInTriangle(triangle, point) {
     var d2 = dot(cross2, cross2); // Area of the triangle formed by BC and BP
     var d3 = dot(cross3, cross3); // Area of the triangle formed by CA and CP
 
-    if (d1 === 0 || d2 === 0 || d3 === 0) {
-        return false; // The point is on the boundary of the triangle, so it's not strictly inside.
-    }
-
     // If the sign of all cross products is the same, the point is inside the triangle
-    return (dot(cross1, cross2) > 0 && dot(cross2, cross3) > 0);
+    return (dot(cross1, cross2) > -tolerance && dot(cross2, cross3) > -tolerance);
 }
 
 /*

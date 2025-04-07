@@ -843,23 +843,31 @@ window.addEventListener("keypress", function (event) {
 }, true);
 
 function castRays() {
-    for (let i = 0; i < resolution; i++) {
+    for (let i = 0; i < resolution; i++) 
+    {
+        var ithingy = (2*i/resolution)-1;
+        const squareSize = 512/resolution;
         for (let j = 0; j < resolution; j++) {
             rayDepth = 0;
 
-            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (2*i/resolution)-1]), playerRot);//the vector of the ray originating from the camera
+            //the vector of the ray originating from the camera
+            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, ithingy]), playerRot);
             
             // rayWorker(i, j, playerPos, rayRot, [0,0]);
 
-            var color = ray(playerPos, rayRot, [0,0]); // the third argument is the triangel exclude. [0,0] means don't exclude a triangle
-            color = linearToSRGB(color); //corrects the collor to make darker areas slightly lighter
-            color = `rgb(${color[0]} ${color[1]} ${color[2]})`; //formattting it so html can read
+            // 0,0 triangel exclude
+            //0,0
+            var color = ray(playerPos, rayRot, [0,0]);
+            
+            //corrects the collor to make darker areas slightly lighter
+            color = linearToSRGB(color);
+            //formattting it so html can read
+            color = `rgb(${color[0]} ${color[1]} ${color[2]})`
             ctx.fillStyle = color;
-            ctx.fillRect(j*(512/resolution), 0, (j+1)*(512/resolution), (512-(i)*(512/resolution)))/2;
+            ctx.fillRect(j*(squareSize), 0, (j+1)*(squareSize), (512-(i)*(squareSize)))/2;
         }
     }
 }
-
 function refreshScreen() {
     castRays();
 }

@@ -523,26 +523,34 @@ function rightVector3(rotation){
 
 function isPointInTriangle(triangle, point){
     // based on heron's formula
-    var sab = vector3Subtract(triangle[0], triangle[1]);
-    var sbc = vector3Subtract(triangle[1], triangle[2]);
-    var sca = vector3Subtract(triangle[2], triangle[0]);
-    var spa = vector3Subtract(triangle[0], point);
-    var spb = vector3Subtract(triangle[1], point);
-    var spc = vector3Subtract(triangle[2], point);
-    var dab = Math.sqrt((sab[0]*sab[0])+(sab[1]*sab[1])+(sab[2]*sab[2]));
-    var dbc = Math.sqrt((sbc[0]*sbc[0])+(sbc[1]*sbc[1])+(sbc[2]*sbc[2]));
-    var dca = Math.sqrt((sca[0]*sca[0])+(sca[1]*sca[1])+(sca[2]*sca[2]));
-    var dap = Math.sqrt((spa[0]*spa[0])+(spa[1]*spa[1])+(spa[2]*spa[2]));
-    var dbp = Math.sqrt((spb[0]*spb[0])+(spb[1]*spb[1])+(spb[2]*spb[2]));   
-    var dcp = Math.sqrt((spc[0]*spc[0])+(spc[1]*spc[1])+(spc[2]*spc[2])); 
+    var vab = vector3Subtract(triangle[0], triangle[1]);
+    var vbc = vector3Subtract(triangle[1], triangle[2]);
+    var vca = vector3Subtract(triangle[2], triangle[0]);
+
+    var dab = Math.sqrt((vab[0]*vab[0])+(vab[1]*vab[1])+(vab[2]*vab[2]));
+    var dbc = Math.sqrt((vbc[0]*vbc[0])+(vbc[1]*vbc[1])+(vbc[2]*vbc[2]));
+    var dca = Math.sqrt((vca[0]*vca[0])+(vca[1]*vca[1])+(vca[2]*vca[2]));
+
     var sabc = (dab+dbc+dca)/2;
+
+    var sqabc = (sabc*(sabc-dab)*(sabc-dbc)*(sabc-dca));
+
+    var vpa = vector3Subtract(triangle[0], point);
+    var vpb = vector3Subtract(triangle[1], point);
+    var vpc = vector3Subtract(triangle[2], point);
+
+    var dap = Math.sqrt((vpa[0]*vpa[0])+(vpa[1]*vpa[1])+(vpa[2]*vpa[2]));
+    var dbp = Math.sqrt((vpb[0]*vpb[0])+(vpb[1]*vpb[1])+(vpb[2]*vpb[2]));
+    var dcp = Math.sqrt((vpc[0]*vpc[0])+(vpc[1]*vpc[1])+(vpc[2]*vpc[2]));
+
     var spbc = (dbp+dbc+dcp)/2;
     var sapc = (dap+dcp+dca)/2;
     var sabp = (dab+dbp+dap)/2;
-    var sqabc = (sabc*(sabc-dab)*(sabc-dbc)*(sabc-dca));
+
     var sqpbc = (spbc*(spbc-dbp)*(spbc-dbc)*(spbc-dcp));
     var sqapc = (sapc*(sapc-dap)*(sapc-dcp)*(sapc-dca));
     var sqabp = (sabp*(sabp-dab)*(sabp-dbp)*(sabp-dap));
+
     var abc;
     var pbc;
     var apc;

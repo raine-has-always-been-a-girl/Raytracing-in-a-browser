@@ -47,6 +47,7 @@ var emptySet = [
         [0,0,0]
     ]
 ];
+
 var testTriangles = [
     [
         [3, 0, -3],
@@ -65,6 +66,7 @@ var testTriangles = [
         [0,0,0]
     ]
 ];
+
 var cube = [
     [
         [-1, -1, -1],
@@ -97,9 +99,7 @@ var cube = [
         [0,0,0]
     ]
 ];
-
-
-//all objects 
+ 
 var room = [
     [
         [-6, -6, -6],
@@ -132,6 +132,7 @@ var room = [
         [0,0,0]
     ]
 ];
+// list of all objects in scene. anything not in this list will not be rendered.
 const objectList = [emptySet, room, cube, testTriangles];
 const lightList = [[-6, 6, 0, 16]];
 
@@ -184,7 +185,7 @@ function calculateBoundingVolumes() {
 function ray(o, r, triangleExclude) 
 {
     rayDepth = rayDepth+1;
-    //if it goes beyond the limit render magenta
+    // if it goes beyond the limit render magenta
     if (rayDepth > rayLimit) 
     {
         return [255, 0, 255];
@@ -192,21 +193,21 @@ function ray(o, r, triangleExclude)
     var distCheck = Infinity;
     var nearestTriangle = [0,0];
 
-    //more of gets than checks
+    // more of gets than checks
     var pointCheck = [0, 0, 0];
     var normalCheck = [0, 0, 0];
 
-    //itterates throught objects
+    // itterates throught objects
     for(let i=1; i<objectList.length; i++) 
     {
-        //if it misses the bounding box or hits the bounding box but but its further than the closest dist check
+        // if it misses the bounding box or hits the bounding box but but its further than the closest dist check
         if (rayBoxIntersection(o,r, objectList[i][2]) > distCheck) 
         {
             continue;
         }
-        //itterats throught the triangles of the object
+        // itterates throught the triangles of the object
         for(let j=0; j<((objectList[i][1]).length); j++) {
-            //if a triangle is specified to be excluded do so
+            // if a triangle is specified to be excluded, do so
             if ((i == triangleExclude[0])&&(j == triangleExclude[1])){
                 continue;
             }
@@ -216,7 +217,7 @@ function ray(o, r, triangleExclude)
                 objectList[i][0][objectList[i][1][j][0][1]], // Vertex 2
                 objectList[i][0][objectList[i][1][j][0][2]]  // Vertex 3
             ];
-            //normalise the vector
+            // get normal vector of the triangle
             var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
             var dotnr = dot(n, r);
             if (dotnr == 0) {
@@ -906,18 +907,18 @@ function castRays() {
         for (let j = 0; j < resolution; j++) {
             rayDepth = 0;
 
-            //the vector of the ray originating from the camera
+            // the vector of the ray originating from the camera
             var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, ithingy]), playerRot);
             
             // rayWorker(i, j, playerPos, rayRot, [0,0]);
 
             // 0,0 triangel exclude
-            //0,0
+            // 0,0
             var color = ray(playerPos, rayRot, [0,0]);
             
-            //corrects the collor to make darker areas slightly lighter
+            // corrects the collor to make darker areas slightly lighter
             color = linearToSRGB(color);
-            //formattting it so html can read
+            // formattting it so html can read
             color = `rgb(${color[0]} ${color[1]} ${color[2]})`
             ctx.fillStyle = color;
             ctx.fillRect(j*(squareSize), 0, (j+1)*(squareSize), (512-(i)*(squareSize)));

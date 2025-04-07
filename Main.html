@@ -21,16 +21,13 @@
 const canvas = document.getElementById("window");
 
 const ctx = canvas.getContext("2d");
-//resolution
-const resolution = 128;
+const resolution = 128; //resolution
 
 const tolerance = 0.0001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
-//placeholder code
-//how many times the ray can bounce
-const rayLimit = 16;
+const rayLimit = 16; //how many times the ray can bounce
 
 
 var rayDepth;
@@ -53,6 +50,7 @@ var emptySet = [
         [0,0,0]
     ]
 ];
+
 var testTriangles = [
     [
         [3, 0, -3],
@@ -71,6 +69,7 @@ var testTriangles = [
         [0,0,0]
     ]
 ];
+
 var cube = [
     [
         [-1, -1, -1],
@@ -104,8 +103,6 @@ var cube = [
     ]
 ];
 
-
-//all objects 
 var room = [
     [
         [-6, -6, -6],
@@ -138,7 +135,8 @@ var room = [
         [0,0,0]
     ]
 ];
-const objectList = [emptySet, room, cube, testTriangles];
+
+const objectList = [emptySet, room, cube, testTriangles]; //all objects 
 const lightList = [[-6, 6, 0, 16]];
 
 
@@ -151,8 +149,7 @@ const lightList = [[-6, 6, 0, 16]];
 
 // importScripts('worker.js');
 calculateBoundingVolumes();
-// mainly just an alias for castRays();
-refreshScreen();
+refreshScreen(); // mainly just an alias for castRays();
 
 
 
@@ -526,7 +523,6 @@ function rightVector3(rotation){
 
 function isPointInTriangle(triangle, point){
     // based on heron's formula
-    // wildly ineficient. fix needed
     var sab = vector3Subtract(triangle[0], triangle[1]);
     var sbc = vector3Subtract(triangle[1], triangle[2]);
     var sca = vector3Subtract(triangle[2], triangle[0]);
@@ -851,19 +847,13 @@ function castRays() {
         for (let j = 0; j < resolution; j++) {
             rayDepth = 0;
 
-            //the vector of the ray originating from the camera
-            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (2*i/resolution)-1]), playerRot);
+            var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, (2*i/resolution)-1]), playerRot);//the vector of the ray originating from the camera
             
             // rayWorker(i, j, playerPos, rayRot, [0,0]);
 
-            // 0,0 triangel exclude
-            //0,0
-            var color = ray(playerPos, rayRot, [0,0]);
-            
-            //corrects the collor to make darker areas slightly lighter
-            color = linearToSRGB(color);
-            //formattting it so html can read
-            color = `rgb(${color[0]} ${color[1]} ${color[2]})`
+            var color = ray(playerPos, rayRot, [0,0]); // the third argument is the triangel exclude. [0,0] means don't exclude a triangle
+            color = linearToSRGB(color); //corrects the collor to make darker areas slightly lighter
+            color = `rgb(${color[0]} ${color[1]} ${color[2]})`; //formattting it so html can read
             ctx.fillStyle = color;
             ctx.fillRect(j*(512/resolution), 0, (j+1)*(512/resolution), (512-(i)*(512/resolution)))/2;
         }

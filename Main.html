@@ -565,14 +565,15 @@ function isPointInTriangle(triangle, point) {
     var cross1 = cross(AB, AP);
     var cross2 = cross(BC, BP);
     var cross3 = cross(CA, CP);
+    var cross4 = cross(AB, CA);
     
     // Check the signs of the cross products to determine if the point is on the same side of each edge
-    var d1 = dot(cross1, cross1); // Area of the triangle formed by AB and AP
-    var d2 = dot(cross2, cross2); // Area of the triangle formed by BC and BP
-    var d3 = dot(cross3, cross3); // Area of the triangle formed by CA and CP
-
-    // If the sign of all cross products is the same, the point is inside the triangle
-    return (dot(cross1, cross2) > -tolerance && dot(cross2, cross3) > -tolerance);
+    var d1 = Math.sqrt(dot(cross1, cross1)); // Area of the triangle formed by AB and AP
+    var d2 = Math.sqrt(dot(cross2, cross2)); // Area of the triangle formed by BC and BP
+    var d3 = Math.sqrt(dot(cross3, cross3)); // Area of the triangle formed by CA and CP
+    var d4 = Math.sqrt(dot(cross4, cross4)); // Area of the triangle formed by AB and CA
+    
+    return (d1+d2+d3 <= d4+tolerance);
 }
 
 /*

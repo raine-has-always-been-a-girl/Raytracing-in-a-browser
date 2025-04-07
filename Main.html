@@ -1,20 +1,14 @@
-
-
-
 <canvas id="window" width="512" height="512">
 </canvas>
 
-<!-- <img id="texture0" width="512" height="512" src="dark+parquet-512x512.bmp"> -->
-<!-- <script src="worker.js"></script> -->
 <script>
-
-// const texture0 = document.getElementById("texture0");
 
 
 //issues, shaddows cast on both sides
 // portals dont move the player
 //issues uppon held input
 //frame rate/time counter
+
 
 
 
@@ -254,9 +248,7 @@ function ray(o, r, triangleExclude)
             return color;
 
         case "texture":
-            var texture = objectList[nearestTriangle[0]][1][nearestTriangle[1]][2];
-            var textureCoordinates = objectList[nearestTriangle[0]][1][nearestTriangle[1]][3];
-            // ctx.drawImage();
+            // texture code
             break;
 
         case "portal":
@@ -816,19 +808,6 @@ function rayBoxIntersection(o, r, box) {
 
 // window stuff
 
-
-function rayWorker(i, j, o, r, te) {
-    const worker = new Worker('worker.js');
-    worker.postMessage({o: o, r: r, te: te});
-    worker.onmessage = function(event) {
-        var color = event.color;
-        color = linearToSRGB(color);
-        ctx.fillStyle = `rgb(${color[0]} ${color[1]} ${color[2]})`;
-        ctx.fillRect(j*(512/resolution), 0, (j+1)*(512/resolution), (512-(i)*(512/resolution)))/2;
-    };
-}
-
-
 // movement code
 canvas.addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect(); 
@@ -941,7 +920,7 @@ function castRays() {
             //formattting it so html can read
             color = `rgb(${color[0]} ${color[1]} ${color[2]})`
             ctx.fillStyle = color;
-            ctx.fillRect(j*(squareSize), 0, (j+1)*(squareSize), (512-(i)*(squareSize)))/2;
+            ctx.fillRect(j*(squareSize), 0, (j+1)*(squareSize), (512-(i)*(squareSize)));
         }
     }
 }

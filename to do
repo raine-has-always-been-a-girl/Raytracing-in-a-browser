@@ -1,3 +1,4 @@
+framerate counter
 optimize bounding volumes with R-trees
 add indirect ilumination to portals
 add color bleeding with indirect ilumination

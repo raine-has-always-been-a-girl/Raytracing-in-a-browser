@@ -5,7 +5,7 @@
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 
-const resolution = 96; // rendered resolution
+const resolution = 128; // rendered resolution
 const tolerance = 0.0000000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
@@ -120,8 +120,8 @@ var room = [
     ]
 ];
 // list of all objects in scene. anything not in this list will not be rendered.
-const objectList = [emptySet, room, cube, testTriangles];
-const lightList = [[-6, 6, 0, 16]];
+const objectList = [emptySet, room, cube];
+const lightList = [[-6, 6, 6, 16]];
 
 
 
@@ -164,9 +164,6 @@ function calculateBoundingVolumes() {
         objectList[i][2] = [boxMin, boxMax];
     }
 }
-
-
-
 
 // ray function
 function ray(o, r, triangleExclude) 
@@ -284,25 +281,66 @@ function indirectLight(point, normal, triangleExclude) {
             for(let j=0; j<((objectList[i][1]).length); j++) {
                 if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
                         continue;
-                } else if (objectList[i][1][j][1] === "mirror") {
-                    var triangle = [
-                        objectList[i][0][objectList[i][1][j][0][0]],
-                        objectList[i][0][objectList[i][1][j][0][1]],
-                        objectList[i][0][objectList[i][1][j][0][2]]
-                    ];
-                    var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
-                    var reflectedLight = vector3Subtract(triangle[0], reflectVector3(vector3Subtract(triangle[0], lightList[h]), n));
-                    var dist = Math.sqrt(((reflectedLight[0]-point[0])**2)+((reflectedLight[1]-point[1])**2)+((reflectedLight[2]-point[2])**2));
-                    var r = vector3Normalize(vector3Subtract(reflectedLight, point));
-                    var distA = (-(dot(n, point)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dot(n, r))-tolerance;
-                    var reflectionPoint = [(point[0]+distA*r[0])+(n[0]*tolerance), (point[1]+distA*r[1])+(n[1]*tolerance), (point[2]+distA*r[2])+(n[2]*tolerance)];
-                    if(isPointInTriangle(triangle, reflectionPoint)) {
-                        if((!shadowCheck(reflectionPoint, vector3Subtract(lightList[h], reflectionPoint), [i,j])) && (!shadowCheck(point, vector3Subtract(reflectionPoint, point), [i,j]))) {
-                            light = light+((lightList[h][3]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
-                        }
-                    }
                 } else {
-                    // difuse reflection code
+                    var property = objectList[i][1][j][1];
+                    if (property === "mirror") {
+                        var triangle = [
+                            objectList[i][0][objectList[i][1][j][0][0]],
+                            objectList[i][0][objectList[i][1][j][0][1]],
+                            objectList[i][0][objectList[i][1][j][0][2]]
+                        ];
+                        var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
+                        var reflectedLight = vector3Subtract(triangle[0], reflectVector3(vector3Subtract(triangle[0], lightList[h]), n));
+                        var dist = Math.sqrt(((reflectedLight[0]-point[0])**2)+((reflectedLight[1]-point[1])**2)+((reflectedLight[2]-point[2])**2));
+                        var r = vector3Normalize(vector3Subtract(reflectedLight, point));
+                        var distA = (-(dot(n, point)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dot(n, r))-tolerance;
+                        var reflectionPoint = [(point[0]+distA*r[0])+(n[0]*tolerance), (point[1]+distA*r[1])+(n[1]*tolerance), (point[2]+distA*r[2])+(n[2]*tolerance)];
+                        if(isPointInTriangle(triangle, reflectionPoint)) {
+                            if((!shadowCheck(reflectionPoint, vector3Subtract(lightList[h], reflectionPoint), [i,j])) && (!shadowCheck(point, vector3Subtract(reflectionPoint, point), [i,j]))) {
+                                light = light+((lightList[h][3]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
+                            }
+                        }
+                    } else if (property === "portal") {
+                        var transform = objectList[i][1][j][2];
+                        var triangle = [
+                            objectList[i][0][objectList[i][1][j][0][0]],
+                            objectList[i][0][objectList[i][1][j][0][1]],
+                            objectList[i][0][objectList[i][1][j][0][2]]
+                        ];
+                        var triangle2 = [
+                            vector3Add(triangle[0], transform),
+                            vector3Add(triangle[1], transform),
+                            vector3Add(triangle[2], transform)
+                        ];
+                        var portalLight = vector3Subtract(lightList[h], transform);
+                        var r = vector3Normalize(vector3Subtract(portalLight, point));
+                        var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
+                        var dotnr = dot(n, r);
+                        if (dotnr == 0) {
+                            continue;
+                        }
+                        var dist2 = (-(dot(n, lightList[h])+dot(n, [-triangle2[0][0], -triangle2[0][1], -triangle2[0][2]]))/dotnr)-tolerance;
+                        var portalPoint2 = [(lightList[h][0]+dist2*r[0])+(n[0]*tolerance), (lightList[h][1]+dist2*r[1])+(n[1]*tolerance), (lightList[h][2]+dist2*r[2])+(n[2]*tolerance)];
+                        if (!isPointInTriangle(triangle2, portalPoint2)) {
+                            console.log(portalPoint2[1])
+                            continue;
+                        }
+                        var triangleExclude = objectList[i][1][j][3];
+                        if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, triangleExclude])) {
+                            continue;
+                        }
+                        var portalPoint = vector3Subtract(portalPoint2, transform)
+                        if (shadowCheck(portalPoint, vector3Subtract(portalPoint, point), [i, j])) {
+                            continue;
+                        }
+                        
+                        // light=1;
+                        light = light+((lightList[h][3]/(((point[0]-portalLight[0])**2)+((point[1]-portalLight[1])**2)+((point[2]-portalLight[2])**2)))*Math.cos(dot(vector3Normalize(r), normal)));
+
+
+                    } else {
+                        // difuse reflection code
+                    }
                 }
             }
         }
@@ -818,7 +856,6 @@ canvas.addEventListener('click', function(event) {
 });
 
 window.addEventListener("keypress", function (event) {
-    
     if (event.defaultPrevented) {
         return; // Do nothing if the event was already processed
     }
@@ -892,10 +929,10 @@ window.addEventListener("keypress", function (event) {
 }, true);
 
 function castRays() {
+    const squareSize = 512/resolution; // this line breaks when moved outside of the function
     for (let i = 0; i < resolution; i++) 
     {
         var ithingy = (2*i/resolution)-1;
-        const squareSize = 512/resolution;
         for (let j = 0; j < resolution; j++) {
             rayDepth = 0;
 

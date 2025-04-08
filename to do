@@ -2,6 +2,7 @@ to do
 add a framerate counter
 fix lag issue with held inputs
 add support for transforms
+add gimbal lock toggle
 make portals move the player
 optimize bounding volumes with R-trees
 add indirect ilumination to portals

@@ -16,7 +16,7 @@ const canvas = document.getElementById("window");
 
 const ctx = canvas.getContext("2d");
 //resolution
-const resolution = 128;
+const resolution = 96;
 
 const tolerance = 0.0001;
 const minimumLightValue = 0.005;
@@ -809,6 +809,11 @@ function rayBoxIntersection(o, r, box) {
 
 // window stuff
 
+// waits the specefied amount of miliseconds
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // movement code
 canvas.addEventListener('click', function(event) {
     const rect = canvas.getBoundingClientRect(); 
@@ -921,7 +926,7 @@ function castRays() {
             // formattting it so html can read
             color = `rgb(${color[0]} ${color[1]} ${color[2]})`
             ctx.fillStyle = color;
-            ctx.fillRect(j*(squareSize), 0, (j+1)*(squareSize), (512-(i)*(squareSize)));
+            ctx.fillRect(j*squareSize, 512-(i*squareSize), squareSize+1, squareSize+1);
         }
     }
 }

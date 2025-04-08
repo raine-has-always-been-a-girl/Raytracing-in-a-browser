@@ -7,4 +7,3 @@ multithreading
 
 known bugs
 when the sine of euler angle y = 0 shit breaks
-Strange artifacts when resolution is not a power of 2

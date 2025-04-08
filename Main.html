@@ -35,12 +35,12 @@ var emptySet = [
     ]
 ];
 
-var testTriangles = [
+var mirror = [
     [
-        [3, 0, -3],
-        [3, 0, 3],
-        [0, -3, -3],
-        [0, -3, 3]
+        [4, 0, -4],
+        [4, 0, 4],
+        [0, -4, -4],
+        [0, -4, 4]
     ], 
     
     [
@@ -120,8 +120,8 @@ var room = [
     ]
 ];
 // list of all objects in scene. anything not in this list will not be rendered.
-const objectList = [emptySet, room, cube];
-const lightList = [[-6, 6, 6, 16]];
+const objectList = [emptySet, room, cube, mirror];
+const lightList = [[-4, 4, 4, 16]];
 
 
 
@@ -325,12 +325,11 @@ function indirectLight(point, normal, triangleExclude) {
                             console.log(portalPoint2[1])
                             continue;
                         }
-                        var triangleExclude = objectList[i][1][j][3];
-                        if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, triangleExclude])) {
+                        if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, objectList[i][1][j][3]])) {
                             continue;
                         }
                         var portalPoint = vector3Subtract(portalPoint2, transform)
-                        if (shadowCheck(portalPoint, vector3Subtract(portalPoint, point), [i, j])) {
+                        if (shadowCheck(portalPoint, vector3Subtract(portalPoint, point), triangleExclude)) {
                             continue;
                         }
                         

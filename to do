@@ -5,7 +5,8 @@ add support for transforms
 add gimbal lock toggle
 make portals move the player
 optimize bounding volumes with R-trees
-add indirect ilumination to portals
+make indirect ilumination with portals and mirrors recursive
+figure out difuse reflections
 add color bleeding with indirect ilumination
 add textures
 multithreading

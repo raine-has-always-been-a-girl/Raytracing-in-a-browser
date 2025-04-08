@@ -2,27 +2,14 @@
 </canvas>
 
 <script>
-
-
-//issues, shaddows cast on both sides
-// portals dont move the player
-//issues uppon held input
-//frame rate/time counter
-
-
-
-
 const canvas = document.getElementById("window");
-
 const ctx = canvas.getContext("2d");
-//resolution
-const resolution = 96;
 
-const tolerance = 0.0001;
+const resolution = 96; // rendered resolution
+const tolerance = 0.0000000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
-//placeholder code
 //how many times the ray can bounce
 const rayLimit = 16;
 

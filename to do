@@ -1,4 +1,7 @@
-framerate counter
+to do
+add a framerate counter
+fix lag issue with held inputs
+make portals move the player
 optimize bounding volumes with R-trees
 add indirect ilumination to portals
 add color bleeding with indirect ilumination

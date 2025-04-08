@@ -5,8 +5,8 @@
 const canvas = document.getElementById("window");
 const ctx = canvas.getContext("2d");
 
-const resolution = 128; // rendered resolution
-const tolerance = 0.0000000000001;
+const resolution = 64; // rendered resolution
+const tolerance = 0.000000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
@@ -89,19 +89,19 @@ var cube = [
  
 var room = [
     [
-        [-6, -6, -6],
-        [-6, -6, 6],
-        [-6, 6, -6],
-        [-6, 6, 6],
-        [6, -6, -6],
-        [6, -6, 6],
-        [6, 6, -6],
-        [6, 6, 6]
+        [-1, -1, -1],
+        [-1, -1, 1],
+        [-1, 1, -1],
+        [-1, 1, 1],
+        [1, -1, -1],
+        [1, -1, 1],
+        [1, 1, -1],
+        [1, 1, 1]
     ],
 
     [
-        [[0, 2, 4], "portal", [0, 0, 12], 10],
-        [[2, 6, 4], "portal", [0, 0, 12], 11],
+        [[0, 2, 4], "portal", [[0, 0, 16], [0, 0, 0], [1, 1, 1]], 10],
+        [[2, 6, 4], "portal", [[0, 0, 16], [0, 0, 0], [1, 1, 1]], 11],
         [[0, 1, 2], [255, 0, 0]],
         [[1, 3, 2], [255, 0, 0]],
         [[0, 4, 1], [0, 0, 255]],
@@ -110,8 +110,8 @@ var room = [
         [[5, 6, 7], [255, 127, 0]],
         [[2, 3, 6], [0, 255, 0]],
         [[3, 7, 6], [0, 255, 0]],
-        [[1, 5, 3], "portal", [0, 0, -12], 0],
-        [[3, 5, 7], "portal", [0, 0, -12], 1]
+        [[1, 5, 3], "portal", [[0, 0, -16], [0, 0, 0], [1, 1, 1]], 0],
+        [[3, 5, 7], "portal", [[0, 0, -16], [0, 0, 0], [1, 1, 1]], 1]
     ],
 
     [
@@ -120,8 +120,13 @@ var room = [
     ]
 ];
 // list of all objects in scene. anything not in this list will not be rendered.
-const objectList = [emptySet, room, cube, mirror];
-const lightList = [[-4, 4, 4, 16]];
+const objectList = [
+    [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], 
+    [room, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
+    [cube, [[0, 0, 0], [0, 0, 1], [0.5, 2, 1]]], 
+    // [mirror, [[0, 0, 0], [0, 0, 0], [1, 1, 1]]]
+];
+const lightList = [[-7, 7, 7, 16]];
 
 
 
@@ -132,7 +137,9 @@ const lightList = [[-4, 4, 4, 16]];
 
 
 // importScripts('worker.js');
-calculateBoundingVolumes();
+for(let i=0; i<objectList.length; i++) {
+    calculateBoundingVolumes(i);
+}
 // mainly just an alias for castRays();
 refreshScreen();
 
@@ -147,22 +154,40 @@ refreshScreen();
 
 // rendering stuff
 
-function calculateBoundingVolumes() {
-    for(let i=0; i<objectList.length; i++) {
-        var boxMax = [-Infinity, -Infinity, -Infinity];
-        var boxMin = [Infinity, Infinity, Infinity];
-        for(let j=0; j<((objectList[i][0]).length); j++) {
-            for(let k=0; k<3; k++) {
-                if (objectList[i][0][j][k] > boxMax[k]) {
-                    boxMax[k] = objectList[i][0][j][k];
-                }
-                if (objectList[i][0][j][k] < boxMin[k]) {
-                    boxMin[k] = objectList[i][0][j][k];
-                }
+function transform(point, transform) {
+    var position = transform[0];
+    var rotation = transform[1];
+    var scale = transform[2];
+
+    var newPoint = [
+        point[0]*scale[0],
+        point[1]*scale[1],
+        point[2]*scale[2]
+    ];
+
+    newPoint = rotateVector3(newPoint, rotation);
+
+    newPoint = vector3Add(newPoint, position);
+
+    return newPoint;
+}
+
+function calculateBoundingVolumes(i) {
+    var objectTransform = objectList[i][1];
+    var boxMax = [-Infinity, -Infinity, -Infinity];
+    var boxMin = [Infinity, Infinity, Infinity];
+    for(let j=0; j<((objectList[i][0][0]).length); j++) {
+        for(let k=0; k<3; k++) {
+            var point = transform(objectList[i][0][0][j][k], objectTransform);
+            if (point > boxMax[k]) {
+                boxMax[k] = point;
+            }
+            if (point < boxMin[k]) {
+                boxMin[k] = point;
             }
         }
-        objectList[i][2] = [boxMin, boxMax];
     }
+    objectList[i][0][2] = [boxMin, boxMax];
 }
 
 // ray function
@@ -181,25 +206,31 @@ function ray(o, r, triangleExclude)
     var pointCheck = [0, 0, 0];
     var normalCheck = [0, 0, 0];
 
+    var getTransform;
+
     // itterates throught objects
     for(let i=1; i<objectList.length; i++) 
     {
         // if it misses the bounding box or hits the bounding box but but its further than the closest dist check
-        if (rayBoxIntersection(o,r, objectList[i][2]) > distCheck) 
+        if (rayBoxIntersection(o,r, objectList[i][0][2]) > distCheck) 
         {
             continue;
         }
+
+        // gets the transform of the object
+        var objectTransform = objectList[i][1];
+
         // itterates throught the triangles of the object
-        for(let j=0; j<((objectList[i][1]).length); j++) {
+        for(let j=0; j<((objectList[i][0][1]).length); j++) {
             // if a triangle is specified to be excluded, do so
             if ((i == triangleExclude[0])&&(j == triangleExclude[1])){
                 continue;
             }
             // Get the coordinates of the triangle's vertices.
             var triangle = [
-                objectList[i][0][objectList[i][1][j][0][0]], // Vertex 1
-                objectList[i][0][objectList[i][1][j][0][1]], // Vertex 2
-                objectList[i][0][objectList[i][1][j][0][2]]  // Vertex 3
+                transform(objectList[i][0][0][objectList[i][0][1][j][0][0]], objectTransform), // Vertex 1
+                transform(objectList[i][0][0][objectList[i][0][1][j][0][1]], objectTransform), // Vertex 2
+                transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
             ];
             // get normal vector of the triangle
             var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
@@ -218,15 +249,16 @@ function ray(o, r, triangleExclude)
                 pointCheck = [point[0], point[1], point[2]];
                 distCheck = dist;
                 nearestTriangle = [i,j];
+                getTransform = objectTransform;
             }
         }
     }
-    switch (objectList[nearestTriangle[0]][1][nearestTriangle[1]][1]) {
+    switch (objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][1]) {
         case "mirror":
             var triangle = [
-                objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][0]],
-                objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][1]],
-                objectList[nearestTriangle[0]][0][objectList[nearestTriangle[0]][1][nearestTriangle[1]][0][2]]
+                transform(objectList[nearestTriangle[0]][0][0][objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][0][0]], getTransform),
+                transform(objectList[nearestTriangle[0]][0][0][objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][0][1]], getTransform),
+                transform(objectList[nearestTriangle[0]][0][0][objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][0][2]], getTransform)
             ];
             var reflectedVector = vector3Normalize(reflectVector3(r, normalCheck));
             var color = ray([pointCheck[0]+reflectedVector[0]*tolerance, pointCheck[1]+reflectedVector[1]*tolerance, pointCheck[2]+reflectedVector[2]*tolerance], reflectedVector, nearestTriangle);
@@ -237,10 +269,10 @@ function ray(o, r, triangleExclude)
             break;
 
         case "portal":
-            return ray(vector3Add(pointCheck, objectList[nearestTriangle[0]][1][nearestTriangle[1]][2]), r, [nearestTriangle[0], objectList[nearestTriangle[0]][1][nearestTriangle[1]][3]]);
+            return ray(transform(pointCheck, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2]), r, [nearestTriangle[0], objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][3]]);
 
         default:
-            var color = objectList[nearestTriangle[0]][1][nearestTriangle[1]][1];
+            var color = objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][1];
             if (renderLight){
                 var light = calculateLight(pointCheck, normalCheck, [nearestTriangle[0], nearestTriangle[1]]);
                 color = [
@@ -278,16 +310,20 @@ function indirectLight(point, normal, triangleExclude) {
     var light = 0;
     for(let h=0; h<lightList.length; h++) {
         for(let i=0; i<objectList.length; i++) {
-            for(let j=0; j<((objectList[i][1]).length); j++) {
+            
+            var objectTransform = objectList[i][1];
+
+            for(let j=0; j<((objectList[i][0][1]).length); j++) {
                 if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
                         continue;
                 } else {
-                    var property = objectList[i][1][j][1];
+                    var property = objectList[i][0][1][j][1];
+
                     if (property === "mirror") {
                         var triangle = [
-                            objectList[i][0][objectList[i][1][j][0][0]],
-                            objectList[i][0][objectList[i][1][j][0][1]],
-                            objectList[i][0][objectList[i][1][j][0][2]]
+                            transform(objectList[i][0][0][objectList[i][0][1][j][0][0]], objectTransform), // Vertex 1
+                            transform(objectList[i][0][0][objectList[i][0][1][j][0][1]], objectTransform), // Vertex 2
+                            transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
                         ];
                         var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
                         var reflectedLight = vector3Subtract(triangle[0], reflectVector3(vector3Subtract(triangle[0], lightList[h]), n));
@@ -300,20 +336,21 @@ function indirectLight(point, normal, triangleExclude) {
                                 light = light+((lightList[h][3]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
                             }
                         }
+
                     } else if (property === "portal") {
-                        var transform = objectList[i][1][j][2];
+                        var portalTransform = objectList[i][0][1][j][2];
                         var triangle = [
-                            objectList[i][0][objectList[i][1][j][0][0]],
-                            objectList[i][0][objectList[i][1][j][0][1]],
-                            objectList[i][0][objectList[i][1][j][0][2]]
+                            transform(objectList[i][0][0][objectList[i][0][1][j][0][0]], objectTransform), // Vertex 1
+                            transform(objectList[i][0][0][objectList[i][0][1][j][0][1]], objectTransform), // Vertex 2
+                            transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
                         ];
                         var triangle2 = [
-                            vector3Add(triangle[0], transform),
-                            vector3Add(triangle[1], transform),
-                            vector3Add(triangle[2], transform)
+                            transform(triangle[0], portalTransform),
+                            transform(triangle[1], portalTransform),
+                            transform(triangle[2], portalTransform)
                         ];
-                        var portalLight = vector3Subtract(lightList[h], transform);
-                        var r = vector3Normalize(vector3Subtract(portalLight, point));
+                        var portalLight = vector3Subtract(lightList[h], transform(lightList[h], portalTransform));
+                        var r = vector3Normalize(vector3Subtract(point, portalLight));
                         var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
                         var dotnr = dot(n, r);
                         if (dotnr == 0) {
@@ -322,13 +359,12 @@ function indirectLight(point, normal, triangleExclude) {
                         var dist2 = (-(dot(n, lightList[h])+dot(n, [-triangle2[0][0], -triangle2[0][1], -triangle2[0][2]]))/dotnr)-tolerance;
                         var portalPoint2 = [(lightList[h][0]+dist2*r[0])+(n[0]*tolerance), (lightList[h][1]+dist2*r[1])+(n[1]*tolerance), (lightList[h][2]+dist2*r[2])+(n[2]*tolerance)];
                         if (!isPointInTriangle(triangle2, portalPoint2)) {
-                            console.log(portalPoint2[1])
                             continue;
                         }
-                        if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, objectList[i][1][j][3]])) {
+                        if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, objectList[i][0][1][j][3]])) {
                             continue;
                         }
-                        var portalPoint = vector3Subtract(portalPoint2, transform)
+                        var portalPoint = vector3Subtract(portalPoint2, portalTransform[0])
                         if (shadowCheck(portalPoint, vector3Subtract(portalPoint, point), triangleExclude)) {
                             continue;
                         }
@@ -350,17 +386,18 @@ function indirectLight(point, normal, triangleExclude) {
 
 function shadowCheck(o, r, triangleExclude) {
     for(let i=0; i<objectList.length; i++) {
-        if (rayBoxIntersection(o,r, objectList[i][2]) > 1) {
+        var objectTransform = objectList[i][1];
+        if (rayBoxIntersection(o,r, objectList[i][0][2]) > 1) {
             continue;
         }
-        for(let j=0; j<((objectList[i][1]).length); j++) {
+        for(let j=0; j<((objectList[i][0][1]).length); j++) {
             if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
                 continue;
             }
             var triangle = [
-                objectList[i][0][objectList[i][1][j][0][0]],
-                objectList[i][0][objectList[i][1][j][0][1]],
-                objectList[i][0][objectList[i][1][j][0][2]]
+                transform(objectList[i][0][0][objectList[i][0][1][j][0][0]], objectTransform), // Vertex 1
+                transform(objectList[i][0][0][objectList[i][0][1][j][0][1]], objectTransform), // Vertex 2
+                transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
             ];
             var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
             var dotnr = dot(n, r);

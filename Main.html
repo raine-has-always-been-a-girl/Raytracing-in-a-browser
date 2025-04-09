@@ -37,10 +37,10 @@ var emptySet = [
 
 var mirror = [
     [
-        [4, 0, -4],
-        [4, 0, 4],
-        [0, -4, -4],
-        [0, -4, 4]
+        [4, 4, -4],
+        [4, 4, 4],
+        [-4, -4, -4],
+        [-4, -4, 4]
     ], 
     
     [
@@ -124,7 +124,7 @@ const objectList = [
     [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], 
     [room, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
     [cube, [[0, 0, 0], [0, 0, 1], [0.5, 2, 1]]], 
-    // [mirror, [[0, 0, 0], [0, 0, 0], [1, 1, 1]]]
+    [mirror, [[4, -4, 0], [0, 0, 0], [1, 1, 1]]]
 ];
 const lightList = [[-7, 7, 7, 16]];
 
@@ -344,32 +344,32 @@ function indirectLight(point, normal, triangleExclude) {
                             transform(objectList[i][0][0][objectList[i][0][1][j][0][1]], objectTransform), // Vertex 2
                             transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
                         ];
-                        var triangle2 = [
-                            transform(triangle[0], portalTransform),
-                            transform(triangle[1], portalTransform),
-                            transform(triangle[2], portalTransform)
-                        ];
-                        var portalLight = vector3Subtract(lightList[h], transform(lightList[h], portalTransform));
+                        var portalLight = vector3Add(lightList[h], vector3Subtract(lightList[h], transform(lightList[h], portalTransform)));
                         var r = vector3Normalize(vector3Subtract(point, portalLight));
                         var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
                         var dotnr = dot(n, r);
-                        if (dotnr == 0) {
+                        if ((dotnr <= tolerance) && (dotnr >= -tolerance)) {
                             continue;
                         }
-                        var dist2 = (-(dot(n, lightList[h])+dot(n, [-triangle2[0][0], -triangle2[0][1], -triangle2[0][2]]))/dotnr)-tolerance;
-                        var portalPoint2 = [(lightList[h][0]+dist2*r[0])+(n[0]*tolerance), (lightList[h][1]+dist2*r[1])+(n[1]*tolerance), (lightList[h][2]+dist2*r[2])+(n[2]*tolerance)];
-                        if (!isPointInTriangle(triangle2, portalPoint2)) {
+                        var dist = -(dot(n, portalLight)-dot(n, triangle[1]))/dotnr;
+                        if (dist <= tolerance) {
+                            continue;
+                        }
+                        var portalPoint = [portalLight[0]+dist*r[0], portalLight[1]+dist*r[1], portalLight[2]+dist*r[2]];
+                        var portalPoint2 = transform(portalPoint, portalTransform);
+                        if (!isPointInTriangle(triangle, portalPoint)) {
                             continue;
                         }
                         if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, objectList[i][0][1][j][3]])) {
                             continue;
                         }
-                        var portalPoint = vector3Subtract(portalPoint2, portalTransform[0])
-                        if (shadowCheck(portalPoint, vector3Subtract(portalPoint, point), triangleExclude)) {
+
+                        // there is a bug on this line that causes grainy lighting
+                        if (shadowCheck(point, vector3Subtract(portalPoint, point), [i, j])) {
                             continue;
                         }
                         
-                        // light=1;
+                        // light=0.5;
                         light = light+((lightList[h][3]/(((point[0]-portalLight[0])**2)+((point[1]-portalLight[1])**2)+((point[2]-portalLight[2])**2)))*Math.cos(dot(vector3Normalize(r), normal)));
 
 

@@ -87,7 +87,7 @@ var cube = [
     ]
 ];
  
-var room = [
+var portalRoom = [
     [
         [-1, -1, -1],
         [-1, -1, 1],
@@ -122,7 +122,7 @@ var room = [
 // list of all objects in scene. anything not in this list will not be rendered.
 const objectList = [
     [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], 
-    [room, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
+    [portalRoom, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
     [cube, [[0, 0, 0], [0, 0, 1], [0.5, 2, 1]]], 
     [mirror, [[4, -4, 0], [0, 0, 0], [1, 1, 1]]]
 ];
@@ -368,10 +368,8 @@ function indirectLight(point, normal, triangleExclude) {
                         if (shadowCheck(point, vector3Subtract(portalPoint, point), [i, j])) {
                             continue;
                         }
-                        
-                        // light=0.5;
-                        light = light+((lightList[h][3]/(((point[0]-portalLight[0])**2)+((point[1]-portalLight[1])**2)+((point[2]-portalLight[2])**2)))*Math.cos(dot(vector3Normalize(r), normal)));
 
+                        light = light+((lightList[h][3]/(((point[0]-portalLight[0])**2)+((point[1]-portalLight[1])**2)+((point[2]-portalLight[2])**2)))*Math.cos(dot(vector3Normalize(r), normal)));
 
                     } else {
                         // difuse reflection code
@@ -383,7 +381,6 @@ function indirectLight(point, normal, triangleExclude) {
     return light;
 }
 
-
 function shadowCheck(o, r, triangleExclude) {
     for(let i=0; i<objectList.length; i++) {
         var objectTransform = objectList[i][1];
@@ -391,7 +388,7 @@ function shadowCheck(o, r, triangleExclude) {
             continue;
         }
         for(let j=0; j<((objectList[i][0][1]).length); j++) {
-            if ([i,j] == [triangleExclude[0], triangleExclude[1]]){
+            if ((i == triangleExclude[0]) && (j == triangleExclude[1])){
                 continue;
             }
             var triangle = [

@@ -3,13 +3,13 @@ add a framerate counter
 fix lag issue with held inputs
 add gimbal lock toggle
 make portals move the player
-fix grainy indirect portal lighting
 optimize bounding volumes with R-trees
-make indirect ilumination with portals and mirrors recursive
+make indirect ilumination with portals and mirrors recursive (PUT A LIMIT ON IT)
 figure out difuse reflections
 add color bleeding with indirect ilumination
 add textures
 multithreading
 
 known bugs
+Portal rotation transforms are broken, in general
 when the sine of euler angle y = 0 shit breaks

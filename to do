@@ -8,7 +8,9 @@ make indirect ilumination with portals and mirrors recursive (PUT A LIMIT ON IT)
 figure out difuse reflections
 add color bleeding with indirect ilumination
 add textures
-multithreading
+
+done
+multithreading (slower for some reason)
 
 known bugs
 Portal rotation transforms are broken, in general

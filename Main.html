@@ -37,10 +37,10 @@ var emptySet = [
 
 var mirror = [
     [
-        [4, 4, -4],
-        [4, 4, 4],
-        [-4, -4, -4],
-        [-4, -4, 4]
+        [0, 1, -1],
+        [0, 1, 1],
+        [0, -1, -1],
+        [0, -1, 1]
     ], 
     
     [
@@ -122,9 +122,9 @@ var portalRoom = [
 // list of all objects in scene. anything not in this list will not be rendered.
 const objectList = [
     [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], 
-    [portalRoom, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
-    [cube, [[0, 0, 0], [0, 0, 1], [0.5, 2, 1]]], 
-    [mirror, [[4, -4, 0], [0, 0, 0], [1, 1, 1]]]
+    [cube, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
+    [cube, [[0, 0, 0], [0, 0, 0], [1, 1, 1]]], 
+    // [mirror, [[4, -4, 0], [0, 0, -Math.PI/4], [4, 4, 4]]]
 ];
 const lightList = [[-7, 7, 7, 16]];
 

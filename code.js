@@ -279,7 +279,8 @@ function ray(o, r, triangleExclude)
             break;
 
         case "portal":
-            return ray(transform(pointCheck, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2]), r, [nearestTriangle[0], objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][3]]);
+            newR = rotateVector3(r, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2][1]);
+            return ray(transform(pointCheck, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2]), newR, [nearestTriangle[0], objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][3]]);
 
         case "color":
             var color = objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2];
@@ -319,6 +320,7 @@ function directLight(point, normal, triangleExclude) {
     return light;
 }
 
+// NEEDS MAJOR REWORKING
 function indirectLight(point, normal, triangleExclude) {
     var light = 0;
     for(let h=0; h<lightList.length; h++) {

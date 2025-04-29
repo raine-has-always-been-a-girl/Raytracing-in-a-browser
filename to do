@@ -14,5 +14,4 @@ done
 multithreading (slower for some reason)
 
 known bugs
-Portal rotation transforms are broken, in general
 when the sine of euler angle y = 0 shit breaks

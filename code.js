@@ -105,8 +105,8 @@ var portalRoom = [
     ],
 
     [
-        [[0, 2, 4], "portal", [[0, 0, 16], [0, 0, 0], [1, 1, 1]], 10],
-        [[2, 6, 4], "portal", [[0, 0, 16], [0, 0, 0], [1, 1, 1]], 11],
+        [[0, 2, 4], "portal", [[0, 0, 2], [0, 0, 0], [1, 1, 1]], 10],
+        [[2, 6, 4], "portal", [[0, 0, 2], [0, 0, 0], [1, 1, 1]], 11],
         [[0, 1, 2], "color", [255, 0, 0]],
         [[1, 3, 2], "color", [255, 0, 0]],
         [[0, 4, 1], "color", [0, 0, 255]],
@@ -115,8 +115,8 @@ var portalRoom = [
         [[5, 6, 7], "color", [255, 127, 0]],
         [[2, 3, 6], "color", [0, 255, 0]],
         [[3, 7, 6], "color", [0, 255, 0]],
-        [[1, 5, 3], "portal", [[0, 0, -16], [0, 0, 0], [1, 1, 1]], 0],
-        [[3, 5, 7], "portal", [[0, 0, -16], [0, 0, 0], [1, 1, 1]], 1]
+        [[1, 5, 3], "portal", [[0, 0, -2], [0, 0, 0], [1, 1, 1]], 0],
+        [[3, 5, 7], "portal", [[0, 0, -2], [0, 0, 0], [1, 1, 1]], 1]
     ],
 
     [
@@ -133,7 +133,7 @@ var objectList = [
     // [mirror, [[4, -4, 0], [0, 0, -Math.PI/4], [4, 4, 4]]]
 ];
 var lightList = [
-    [[-7, 7, 7], 16]
+    [[-4, 4, 4], 16]
 ];
 
 
@@ -279,8 +279,34 @@ function ray(o, r, triangleExclude)
             break;
 
         case "portal":
-            newR = rotateVector3(r, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2][1]);
-            return ray(transform(pointCheck, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2]), newR, [nearestTriangle[0], objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][3]]);
+            var portalTransform = objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2];
+            var objectTransform = objectList[nearestTriangle[0]][1];
+            var Position = objectTransform[0]
+            var Rotation = objectTransform[1];
+            var Scale = objectTransform[2];
+
+            var newPoint = [
+                portalTransform[0][0]*Scale[0],
+                portalTransform[0][1]*Scale[1],
+                portalTransform[0][2]*Scale[2]
+            ];
+            newPoint = rotateVector3(newPoint, Rotation);
+            newPoint = vector3Add(newPoint, Position);
+
+            var position = newPoint;
+            var rotation = portalTransform[1];
+            var scale = portalTransform[2];
+        
+            var newPoint = [
+                pointCheck[0]*scale[0],
+                pointCheck[1]*scale[1],
+                pointCheck[2]*scale[2]
+            ];
+            newPoint = rotateVector3(newPoint, rotation);
+            newPoint = vector3Add(newPoint, position);
+
+            var newR = rotateVector3(r, portalTransform[1]);
+            return ray(newPoint, newR, [nearestTriangle[0], objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][3]]);
 
         case "color":
             var color = objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2];

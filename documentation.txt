@@ -1,0 +1,44 @@
+i suck at this. please give feedback.
+
+navigating the scene
+There is no gravity. there is no universal up or down. this may make movement confusing to most people. I may add a toggle to add a universal up and down in the future if i feel like it.
+qweasd are the movement keys. you can use the mouse (you have to click) or uiojkl to rotate the camera.
+
+definitions
+in main.html, the canvas is defined as 512 by 512 resolution. that is the display resolution. const resolution in code.js is the rendered resolution.
+computers don't calculate infinite decemals. because of this, using a simple equality statement doesn't work. const tolerance is the maximum difference before it is considered unequal.
+const minimumLightValue is a bandaid solution so shadows don't appear pitch black. once i figure out difuse indirect ilumination, imma get rid of that.
+const rotationAmount is the rotation amount in radians that the rotation keys (u, i, o, j, k, and l) rotate the player. it has no affect on mouse movement.
+if const renderLight is set to false, the light rendering is skipped, improving performance. when set to true, it renders the light in the scene.
+const rayLimit mostly only applys to portals and mirors to prevent infinite recursion. if set to 0, it renders nothing. if set to 1, it renders only what is directly in the scene. increasing the number further increases the maximum amount of transforms you can do to the ray before it returns the debug color (magenta).
+var playerPos and var playerRot keep track of the player position and the player rotation respectively. rotation is kept track of in euler angles because quaternions suck and william hamilton is an overhyped hack. the euler angles have x for roll, y for pitch, and z for yaw.
+
+object deffinitions
+Everything is rendered out of triangles.
+objects are variables defined by 3 arrays. 
+the first array is the list of points that make up the triangles in an object. 
+the second aray is the list of triangles. each triangle is first defined by its points in an array of 3 intigers. these intigers are the index of the point in the point list. the second item defining the triangle is the atribute with which it. 
+So far, there are 3 supported attributes (portal, mirror, color). 
+mirror requires no further information, it is just a specular reflection. 
+color requires an array of 3 numbers coresponding to the RGB values of the triangle. 
+the portal atribute is the most complex. it requires a transform and a triangle exclude. The transform defines the portals other side relative to the current triangle. the triangle exclude prevents the portal from rendering a specific triangle, usualy the other end of the portal. instead of the regular triangle exclude syntax [objectIndex, triangleIndex], this only allows for excluding triangles in the same object, and only requires the triangle index.
+
+objectList
+objectList is the list of all objects in scene. anything not in this list will not be rendered
+emptySet is the default object for a ray. if a ray does not intersect with anything, it defaults to emptySet. In order for it to remain the default color, it must remain the first item in objectList. 
+objects in objectList are defined by an array of 2. the first thing in the array is the object name, and the second thing is the object transform. you can render the same object multiple times by putting it in objectList multiple times (with different transforms).
+
+lightList
+lightList is the list of all lights in scene. 
+every light is defined as an array of 2. the first item in the array are the light's coordinates, the second thing is the light's strength.
+
+transforms
+Transforms are an array of 3 arrays of 3. the first array of 3 is the position. the second one is the rotation. the third component in a transform is the scale.
+the order they are computed is scale, rotation, then position.
+
+triangle exclude
+specefies a triangle not to render durring a specific step in the rendering process.
+usualy formated as [objectIndex, triangleIndex]
+
+light rendering
+currently, the program renders direct ilumination, direct ilumination trough portals (to a depth of 1), and indirect ilumination of mirrors. nothing else is supported

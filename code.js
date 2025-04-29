@@ -6,23 +6,32 @@ const tolerance = 0.000000000001;
 const minimumLightValue = 0.005;
 const rotationAmount = Math.PI/8;
 const renderLight = true;
-//how many times the ray can bounce
-const rayLimit = 16;
+const rayLimit = 16; // how many times the ray can bounce
+const lightBounceLimit = 4;
 
-
-var rayDepth;
+var rayDepth; // global varable for current ray depth
 
 var playerPos = [-4, 0, 0];
 var playerRot = [0, 0, 0];
 
-//default collor for no intersection
-var emptySet = [
+
+
+
+
+
+
+
+
+
+// object definitions
+
+var emptySet = [ //default collor for no intersection
     [
         [0,0,0]
     ], 
     
     [
-        [[0,0,0], [0, 0, 0]]
+        [[0,0,0], "color", [0, 0, 0]]
     ],
 
     [
@@ -63,18 +72,18 @@ var cube = [
     ],
 
     [
-        [[0, 2, 4], [255, 255, 255]],
-        [[2, 6, 4], [255, 255, 255]],
-        [[0, 1, 2], [255, 0, 0]],
-        [[1, 3, 2], [255, 0, 0]],
-        [[0, 4, 1], [0, 0, 255]],
-        [[1, 4, 5], [0, 0, 255]],
-        [[4, 6, 5], [255, 127, 0]],
-        [[5, 6, 7], [255, 127, 0]],
-        [[2, 3, 6], [0, 255, 0]],
-        [[3, 7, 6], [0, 255, 0]],
-        [[1, 5, 3], [255, 255, 0]],
-        [[3, 5, 7], [255, 255, 0]]
+        [[0, 2, 4], "color", [255, 255, 255]],
+        [[2, 6, 4], "color", [255, 255, 255]],
+        [[0, 1, 2], "color", [255, 0, 0]],
+        [[1, 3, 2], "color", [255, 0, 0]],
+        [[0, 4, 1], "color", [0, 0, 255]],
+        [[1, 4, 5], "color", [0, 0, 255]],
+        [[4, 6, 5], "color", [255, 127, 0]],
+        [[5, 6, 7], "color", [255, 127, 0]],
+        [[2, 3, 6], "color", [0, 255, 0]],
+        [[3, 7, 6], "color", [0, 255, 0]],
+        [[1, 5, 3], "color", [255, 255, 0]],
+        [[3, 5, 7], "color", [255, 255, 0]]
     ],
 
     [
@@ -98,14 +107,14 @@ var portalRoom = [
     [
         [[0, 2, 4], "portal", [[0, 0, 16], [0, 0, 0], [1, 1, 1]], 10],
         [[2, 6, 4], "portal", [[0, 0, 16], [0, 0, 0], [1, 1, 1]], 11],
-        [[0, 1, 2], [255, 0, 0]],
-        [[1, 3, 2], [255, 0, 0]],
-        [[0, 4, 1], [0, 0, 255]],
-        [[1, 4, 5], [0, 0, 255]],
-        [[4, 6, 5], [255, 127, 0]],
-        [[5, 6, 7], [255, 127, 0]],
-        [[2, 3, 6], [0, 255, 0]],
-        [[3, 7, 6], [0, 255, 0]],
+        [[0, 1, 2], "color", [255, 0, 0]],
+        [[1, 3, 2], "color", [255, 0, 0]],
+        [[0, 4, 1], "color", [0, 0, 255]],
+        [[1, 4, 5], "color", [0, 0, 255]],
+        [[4, 6, 5], "color", [255, 127, 0]],
+        [[5, 6, 7], "color", [255, 127, 0]],
+        [[2, 3, 6], "color", [0, 255, 0]],
+        [[3, 7, 6], "color", [0, 255, 0]],
         [[1, 5, 3], "portal", [[0, 0, -16], [0, 0, 0], [1, 1, 1]], 0],
         [[3, 5, 7], "portal", [[0, 0, -16], [0, 0, 0], [1, 1, 1]], 1]
     ],
@@ -115,14 +124,17 @@ var portalRoom = [
         [0,0,0]
     ]
 ];
+
 // list of all objects in scene. anything not in this list will not be rendered.
-const objectList = [
-    [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], 
-    [cube, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
+var objectList = [
+    [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], // emptySet must always be the first in the list
+    [portalRoom, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
     [cube, [[0, 0, 0], [0, 0, 0], [1, 1, 1]]], 
     // [mirror, [[4, -4, 0], [0, 0, -Math.PI/4], [4, 4, 4]]]
 ];
-const lightList = [[-7, 7, 7, 16]];
+var lightList = [
+    [[-7, 7, 7], 16]
+];
 
 
 
@@ -132,7 +144,7 @@ const lightList = [[-7, 7, 7, 16]];
 
 
 
-// importScripts('worker.js');
+
 for(let i=0; i<objectList.length; i++) {
     calculateBoundingVolumes(i);
 }
@@ -150,6 +162,7 @@ refreshScreen();
 
 // rendering stuff
 
+// applies a transform to a point
 function transform(point, transform) {
     var position = transform[0];
     var rotation = transform[1];
@@ -168,6 +181,7 @@ function transform(point, transform) {
     return newPoint;
 }
 
+// calculates the bounding volumes of a given object
 function calculateBoundingVolumes(i) {
     var objectTransform = objectList[i][1];
     var boxMax = [-Infinity, -Infinity, -Infinity];
@@ -267,8 +281,8 @@ function ray(o, r, triangleExclude)
         case "portal":
             return ray(transform(pointCheck, objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2]), r, [nearestTriangle[0], objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][3]]);
 
-        default:
-            var color = objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][1];
+        case "color":
+            var color = objectList[nearestTriangle[0]][0][1][nearestTriangle[1]][2];
             if (renderLight){
                 var light = calculateLight(pointCheck, normalCheck, [nearestTriangle[0], nearestTriangle[1]]);
                 color = [
@@ -278,6 +292,9 @@ function ray(o, r, triangleExclude)
                 ];
             }
             return color;
+        
+        default:
+            return [255, 0, 255]; // returns magenta for missing atribute
     }
 }
 
@@ -291,9 +308,9 @@ function calculateLight(point, normal, triangleExclude){
 function directLight(point, normal, triangleExclude) {
     var light = 0;
     for(let h=0; h<lightList.length; h++) {
-        var r = vector3Subtract(lightList[h], point);
+        var r = vector3Subtract(lightList[h][0], point);
         if(!shadowCheck(point, r, triangleExclude)) {
-            light = light+((lightList[h][3]/((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2])))*Math.cos(dot(vector3Normalize(r), normal)));
+            light = light+((lightList[h][1]/((r[0]*r[0])+(r[1]*r[1])+(r[2]*r[2])))*Math.cos(dot(vector3Normalize(r), normal)));
         }
     }
     if (light < minimumLightValue) {
@@ -322,14 +339,14 @@ function indirectLight(point, normal, triangleExclude) {
                             transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
                         ];
                         var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
-                        var reflectedLight = vector3Subtract(triangle[0], reflectVector3(vector3Subtract(triangle[0], lightList[h]), n));
+                        var reflectedLight = vector3Subtract(triangle[0], reflectVector3(vector3Subtract(triangle[0], lightList[h][0]), n));
                         var dist = Math.sqrt(((reflectedLight[0]-point[0])**2)+((reflectedLight[1]-point[1])**2)+((reflectedLight[2]-point[2])**2));
                         var r = vector3Normalize(vector3Subtract(reflectedLight, point));
                         var distA = (-(dot(n, point)+dot(n, [-triangle[0][0], -triangle[0][1], -triangle[0][2]]))/dot(n, r))-tolerance;
                         var reflectionPoint = [(point[0]+distA*r[0])+(n[0]*tolerance), (point[1]+distA*r[1])+(n[1]*tolerance), (point[2]+distA*r[2])+(n[2]*tolerance)];
                         if(isPointInTriangle(triangle, reflectionPoint)) {
                             if((!shadowCheck(reflectionPoint, vector3Subtract(lightList[h], reflectionPoint), [i,j])) && (!shadowCheck(point, vector3Subtract(reflectionPoint, point), [i,j]))) {
-                                light = light+((lightList[h][3]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
+                                light = light+((lightList[h][1]/(dist**2))*Math.cos(dot(vector3Normalize(r), normal)));
                             }
                         }
 
@@ -340,32 +357,46 @@ function indirectLight(point, normal, triangleExclude) {
                             transform(objectList[i][0][0][objectList[i][0][1][j][0][1]], objectTransform), // Vertex 2
                             transform(objectList[i][0][0][objectList[i][0][1][j][0][2]], objectTransform)  // Vertex 3
                         ];
-                        var portalLight = vector3Add(lightList[h], vector3Subtract(lightList[h], transform(lightList[h], portalTransform)));
-                        var r = vector3Normalize(vector3Subtract(point, portalLight));
+                        var triangle2 = [
+                            triangle[0], // Vertex 1
+                            triangle[1], // Vertex 2
+                            triangle[2]  // Vertex 3
+                        ];
+                        var portalLight = lightList[h][0];
                         var n = vector3Normalize(cross(vector3Subtract(triangle[0], triangle[1]), vector3Subtract(triangle[0], triangle[2])));
-                        var dotnr = dot(n, r);
-                        if ((dotnr <= tolerance) && (dotnr >= -tolerance)) {
-                            continue;
-                        }
-                        var dist = -(dot(n, portalLight)-dot(n, triangle[1]))/dotnr;
-                        if (dist <= tolerance) {
-                            continue;
-                        }
-                        var portalPoint = [portalLight[0]+dist*r[0], portalLight[1]+dist*r[1], portalLight[2]+dist*r[2]];
-                        var portalPoint2 = transform(portalPoint, portalTransform);
-                        if (!isPointInTriangle(triangle, portalPoint)) {
-                            continue;
-                        }
-                        if (shadowCheck(portalPoint2, vector3Subtract(lightList[h], portalPoint2), [i, objectList[i][0][1][j][3]])) {
-                            continue;
-                        }
+                        
+                        for (let k = 0; k < lightBounceLimit; k++) {
+                            var portalLight = vector3Add(portalLight, vector3Subtract(portalLight, transform(portalLight, portalTransform)));
+                            var triangle2 = [
+                                transform(triangle2[0], objectTransform), // Vertex 1
+                                transform(triangle2[1], objectTransform), // Vertex 2
+                                transform(triangle2[2], objectTransform)  // Vertex 3
+                            ];
+                            var r = vector3Normalize(vector3Subtract(point, portalLight));
+                            var dotnr = dot(n, r);
+                            if ((dotnr <= tolerance) && (dotnr >= -tolerance)) {
+                                continue;
+                            }
+                            var dist = -(dot(n, portalLight)-dot(n, triangle[1]))/dotnr;
+                            if (dist <= tolerance) {
+                                continue;
+                            }
+                            var portalPoint = [portalLight[0]+dist*r[0], portalLight[1]+dist*r[1], portalLight[2]+dist*r[2]];
+                            var portalPoint2 = transform(portalPoint, portalTransform);
 
-                        // there is a bug on this line that causes grainy lighting
-                        if (shadowCheck(point, vector3Subtract(portalPoint, point), [i, j])) {
-                            continue;
+                            if (!isPointInTriangle(triangle, portalPoint)) {
+                                continue;
+                            }
+                            if (shadowCheck(portalPoint2, vector3Subtract(lightList[h][0], portalPoint2), [i, objectList[i][0][1][j][3]])) {
+                                continue;
+                            }
+                            
+                            if (shadowCheck(point, vector3Subtract(portalPoint, point), [i, j])) {
+                                continue;
+                            }
+    
+                            light = light+((lightList[h][1]/(((point[0]-portalLight[0])**2)+((point[1]-portalLight[1])**2)+((point[2]-portalLight[2])**2)))*Math.cos(dot(vector3Normalize(r), normal)));
                         }
-
-                        light = light+((lightList[h][3]/(((point[0]-portalLight[0])**2)+((point[1]-portalLight[1])**2)+((point[2]-portalLight[2])**2)))*Math.cos(dot(vector3Normalize(r), normal)));
 
                     } else {
                         // difuse reflection code
@@ -410,6 +441,7 @@ function shadowCheck(o, r, triangleExclude) {
     return false;
 }
 
+// sRGB color correction
 function linearToSRGB(color) {
     if ((color[0]+color[1]+color[2])/3 <= 0.798354) {
         return [
@@ -437,6 +469,7 @@ function linearToSRGB(color) {
 
 // math stuff
 
+// cross product of 2 vectors
 function cross(a, b){
     return [
         (a[1]*b[2])-(a[2]*b[1]),
@@ -445,10 +478,12 @@ function cross(a, b){
     ];
 }
 
+// dot product of 2 vectors
 function dot(a, b){
     return (a[0]*b[0])+(a[1]*b[1])+(a[2]*b[2]);
 }
 
+// subtracts one vector from another
 function vector3Subtract(a, b){
     return [
         a[0]-b[0],
@@ -457,6 +492,7 @@ function vector3Subtract(a, b){
     ];
 }
 
+// adds two vectors
 function vector3Add(a, b){
     return [
         a[0]+b[0],
@@ -465,6 +501,7 @@ function vector3Add(a, b){
     ];
 }
 
+// normalizes a vector
 function vector3Normalize(v) {
     var mag = Math.sqrt((v[0]**2)+(v[1]**2)+(v[2]**2));
     return [
@@ -474,20 +511,14 @@ function vector3Normalize(v) {
     ];
 }
 
-function rotToVector3(rot){
-    return [
-        Math.cos(rot[2])*Math.cos(rot[1]),
-        Math.sin(rot[2])*Math.cos(rot[1]),
-        Math.sin(rot[1])
-    ];
-}
-
+// reflects a vector across a plane using it's normal
 function reflectVector3(vector, normal) {
     // formula gotten from the wikipedia page for Specular reflection
     var dot0 = dot(vector, normal);
     return vector3Subtract(vector, [2*normal[0]*dot0, 2*normal[1]*dot0, 2*normal[2]*dot0]);
 }
 
+// applies euler angle rotations to a vector
 function rotateVector3(vector, rotation){
     var mag = Math.sqrt((vector[1]*vector[1])+(vector[2]*vector[2]));
     var rot = 0;
@@ -538,6 +569,7 @@ function rotateVector3(vector, rotation){
     return newVector3;
 }
 
+// outputs a vector for the upward direction relative to a euler angle
 function upVector3(rotation){
     var cosr0 = Math.cos(rotation[0]);
     var newVector3 = [
@@ -563,6 +595,7 @@ function upVector3(rotation){
     return newVector3;
 }
 
+// outputs a vector for the right direction relative to a euler angle
 function rightVector3(rotation){
     var sinr0 = Math.sin(rotation[0]);
     var newVector3 = [
@@ -588,10 +621,7 @@ function rightVector3(rotation){
     return newVector3;
 }
 
-
-// to improve
-
-
+// returns a boolean stating if a given point is within a triangle
 function isPointInTriangle(triangle, point) {
     // Define the vertices of the triangle
     var A = triangle[0];
@@ -623,6 +653,7 @@ function isPointInTriangle(triangle, point) {
     return (d1+d2+d3 <= d4+tolerance);
 }
 
+// don't worry about it
 function iCantThinkOfANameForThisFunction(c, s) {
     var sins = Math.sin(s);
     var out;
@@ -642,6 +673,7 @@ function iCantThinkOfANameForThisFunction(c, s) {
     return out;
 }
 
+// my sollution to gimbal lock
 function turnRot3(rotation, turnAngle, turnAmount) {
     var a = rotation[0]+turnAngle;
     var cosa = Math.cos(a);
@@ -727,6 +759,7 @@ function turnRot3(rotation, turnAngle, turnAmount) {
     return newRot3;
 }
 
+// returns a boolean stating if a ray intersects with an axis alligned box
 function rayBoxIntersection(o, r, box) {
     var rNeg = vector3Subtract([0,0,0], r);
     var Min = vector3Subtract(box[0], o);
@@ -809,6 +842,7 @@ canvas.addEventListener('click', function(event) {
     refreshScreen();
 });
 
+// key bindings
 window.addEventListener("keypress", function (event) {
     if (event.defaultPrevented) {
         return; // Do nothing if the event was already processed
@@ -882,6 +916,7 @@ window.addEventListener("keypress", function (event) {
     refreshScreen();
 }, true);
 
+// casts a ray for every pixel on the screen
 function castRays() {
     const squareSize = 512/resolution; // this line breaks when moved outside of the function
     for (let i = 0; i < resolution; i++) 
@@ -892,8 +927,6 @@ function castRays() {
 
             // the vector of the ray originating from the camera
             var rayRot = rotateVector3(vector3Normalize([1, (2*j/resolution)-1, ithingy]), playerRot);
-            
-            // rayWorker(i, j, playerPos, rayRot, [0,0]);
 
             // 0,0 triangel exclude
             // 0,0

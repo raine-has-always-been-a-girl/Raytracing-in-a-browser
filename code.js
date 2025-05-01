@@ -128,7 +128,7 @@ var portalRoom = [
 // list of all objects in scene. anything not in this list will not be rendered.
 var objectList = [
     [emptySet, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]], // emptySet must always be the first in the list
-    [portalRoom, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
+    [cube, [[0, 0, 0], [0, 0, 0], [8, 8, 8]]], 
     [cube, [[0, 0, 0], [0, 0, 0], [1, 1, 1]]], 
     // [mirror, [[4, -4, 0], [0, 0, -Math.PI/4], [4, 4, 4]]]
 ];

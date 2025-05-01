@@ -41,4 +41,4 @@ specefies a triangle not to render durring a specific step in the rendering proc
 usualy formated as [objectIndex, triangleIndex]
 
 light rendering
-currently, the program renders direct ilumination, direct ilumination trough portals (to a depth of 1), and indirect ilumination of mirrors. nothing else is supported
+currently, the program renders direct ilumination. nothing else is supported

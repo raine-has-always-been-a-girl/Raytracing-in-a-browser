@@ -3,9 +3,9 @@ add missing atribute color
 add a framerate counter
 fix lag issue with held inputs
 add gimbal lock toggle
+redo indirect ilumination
 make portals move the player
 optimize bounding volumes with R-trees
-make indirect ilumination with portals and mirrors recursive (PUT A LIMIT ON IT)
 figure out difuse reflections
 add color bleeding with indirect ilumination
 add textures
